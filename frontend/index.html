@@ -111,7 +111,9 @@
           <input type="range" id="priceMax" min="0" max="500" value="500" />
         </div>
       </section>
-
+      <button id="resetFilters" class="reset-btn" type="button">
+        รีเซ็ตตัวกรอง
+      </button>
     </aside>
 
     <!-- CONTENT -->
@@ -139,6 +141,7 @@
   </div>
 
   <!-- ================= SCRIPTS ================= -->
+  <script src="index.js"></script>
 
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/th.js"></script>
@@ -155,29 +158,24 @@
     });
   </script>
 
-  <!-- โหลด index.js ท้ายสุด -->
-  <script src="index.js"></script>
   <!-- TEMPLATE FOR EQUIPMENT CARD -->
-<template id="equipmentCardTemplate">
-  <div class="equipment-card">
+  <template id="equipmentCardTemplate">
+    <div class="equipment-card">
 
-    <img src="">
-    <h5 class="name"></h5>
-    <p class="price"></p>
+      <img src="">
+      <h5 class="name"></h5>
+      <p class="price"></p>
 
-    <div class="card-qty-controls">
-      <button class="qty-minus">−</button>
-      <span class="qty-num">0</span>
-      <button class="qty-plus">+</button>
+      <div class="card-qty-controls">
+        <button class="qty-minus">−</button>
+        <span class="qty-num">0</span>
+        <button class="qty-plus">+</button>
+      </div>
+
+      <span class="stock"></span>
+
     </div>
-
-    <span class="stock"></span>
-
-  </div>
-</template>
-
-
-
+  </template>
 </body>
 
 </html>

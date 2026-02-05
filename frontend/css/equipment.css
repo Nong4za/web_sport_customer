@@ -551,7 +551,25 @@ input[type="range"] {
     opacity: 0.5;
     pointer-events: none;
 }
+.reset-btn {
+    margin-top: 12px;
+    width: 100%;
+    padding: 8px 14px;
+    border-radius: 10px;
+    background: #ff7a00;
+    border-color: #ff7a00;
+    font-size: 15px;
+    cursor: pointer;
+    color: white;
 
+    box-shadow: none !important;
+    border-bottom: none !important;
+    transition: background 0.2s;
+}
+
+.reset-btn:hover {
+    background: #e66c00;
+}
 /* กล่องข้อความทับ */
 .overlay-disabled {
     position: absolute;
@@ -571,3 +589,4 @@ input[type="range"] {
 
     z-index: 10;
 }
+

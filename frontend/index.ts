@@ -37,6 +37,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const searchInput =
     document.getElementById("searchInput") as HTMLInputElement | null;
 
+
   // ===== PRICE =====
 
   const minPriceInput =
@@ -50,6 +51,68 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const priceMaxRange =
     document.getElementById("priceMax") as HTMLInputElement | null;
+  // ============================
+  // RESET FILTERS
+  // ============================
+
+const resetBtn =
+  document.getElementById("resetFilters") as HTMLButtonElement | null;
+
+  // RESET BUTTON CLICK
+  resetBtn?.addEventListener("click", () => {
+
+  console.log("RESET FILTERS");
+
+  // ===== STATE =====
+  selectedCategories = [];
+  searchKeyword = "";
+
+  // ===== DATE / TIME / HOURS =====
+  if (dateInput) dateInput.value = "";
+  if (timeSlot) timeSlot.value = "";
+  if (hourInput) hourInput.value = "";
+
+  document
+    .querySelectorAll(".duration-btn")
+    .forEach(b => b.classList.remove("active"));
+
+  // ===== CATEGORY =====
+  categoryBox
+    ?.querySelectorAll<HTMLInputElement>(
+      "input[type=checkbox]"
+    )
+    .forEach(cb => (cb.checked = false));
+
+  // ===== PRICE =====
+  const defaultMin =
+    priceMinRange?.min || "0";
+
+  const defaultMax =
+    priceMaxRange?.max || "5000";
+
+  if (minPriceInput) minPriceInput.value = defaultMin;
+  if (maxPriceInput) maxPriceInput.value = defaultMax;
+
+  if (priceMinRange) priceMinRange.value = defaultMin;
+  if (priceMaxRange) priceMaxRange.value = defaultMax;
+
+  // ===== SEARCH =====
+  if (searchInput) searchInput.value = "";
+
+  // ===== STORAGE =====
+  localStorage.removeItem("rentDate");
+  localStorage.removeItem("timeSlot");
+  localStorage.removeItem("rentHours");
+  localStorage.removeItem("minPrice");
+  localStorage.removeItem("maxPrice");
+
+  // // ถ้าอยาก clear field ใน cart ด้วย
+  // clearFieldInCart();
+  // ===== reload =====
+  loadEquipment();
+
+});
+
 
 
   // ============================
@@ -342,7 +405,7 @@ document.addEventListener("DOMContentLoaded", () => {
         "categories",
         selectedCategories.join(",")
       );
-    
+
     if (minPriceInput?.value)
       params.set("min_price", minPriceInput.value);
 
@@ -496,6 +559,8 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
 });
+
+
 
 
 // ============================

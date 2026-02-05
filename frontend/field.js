@@ -1,4 +1,5 @@
 document.addEventListener("DOMContentLoaded", function () {
+    var _a;
     console.log("field.ts loaded");
     updateCartCount();
     // ============================
@@ -17,55 +18,146 @@ document.addEventListener("DOMContentLoaded", function () {
     var categoryBox = document.getElementById("categoryList");
     var venueGrid = document.getElementById("venueGrid");
     var searchInput = document.getElementById("searchInput");
+    // ===== PRICE RANGE ======
+    var minPriceInput = document.getElementById("minPriceInput");
+    var maxPriceInput = document.getElementById("maxPriceInput");
+    var priceMinRange = document.getElementById("priceMin");
+    var priceMaxRange = document.getElementById("priceMax");
+    // ============================
+    // RESET FILTERS
+    // ============================
+    var resetBtn = document.getElementById("resetFilters");
+    // RESET BUTTON CLICK
+    resetBtn === null || resetBtn === void 0 ? void 0 : resetBtn.addEventListener("click", function () {
+        console.log("RESET FILTERS");
+        // ===== STATE =====
+        selectedCategories = [];
+        searchKeyword = "";
+        // ===== DATE / TIME / HOURS =====
+        if (dateInput)
+            dateInput.value = "";
+        if (timeSlot)
+            timeSlot.value = "";
+        if (hourInput)
+            hourInput.value = "";
+        document
+            .querySelectorAll(".duration-btn")
+            .forEach(function (b) { return b.classList.remove("active"); });
+        // ===== CATEGORY =====
+        categoryBox === null || categoryBox === void 0 ? void 0 : categoryBox.querySelectorAll("input[type=checkbox]").forEach(function (cb) { return (cb.checked = false); });
+        // ===== PRICE =====
+        var defaultMin = (priceMinRange === null || priceMinRange === void 0 ? void 0 : priceMinRange.min) || "0";
+        var defaultMax = (priceMaxRange === null || priceMaxRange === void 0 ? void 0 : priceMaxRange.max) || "5000";
+        if (minPriceInput)
+            minPriceInput.value = defaultMin;
+        if (maxPriceInput)
+            maxPriceInput.value = defaultMax;
+        if (priceMinRange)
+            priceMinRange.value = defaultMin;
+        if (priceMaxRange)
+            priceMaxRange.value = defaultMax;
+        // ===== SEARCH =====
+        if (searchInput)
+            searchInput.value = "";
+        // ===== STORAGE =====
+        localStorage.removeItem("rentDate");
+        localStorage.removeItem("timeSlot");
+        localStorage.removeItem("rentHours");
+        localStorage.removeItem("minPrice");
+        localStorage.removeItem("maxPrice");
+        // // ถ้าอยาก clear field ใน cart ด้วย
+        // clearFieldInCart();
+        // ===== reload =====
+        loadVenues();
+    });
     // ============================
     // RESTORE
     // ============================
     var savedDate = localStorage.getItem("rentDate");
     var savedTime = localStorage.getItem("timeSlot");
     var savedHours = localStorage.getItem("rentHours");
+    var savedMin = localStorage.getItem("minPrice");
+    var savedMax = localStorage.getItem("maxPrice");
+    ;
     if (savedDate && dateInput)
         dateInput.value = savedDate;
-    if (savedHours && hourInput)
+    if (savedHours && hourInput) {
         hourInput.value = savedHours;
-    // ============================
-    // DURATION BUTTONS
-    // ============================
-    var durationBtns = document.querySelectorAll(".duration-btn");
-    var _loop_1 = function (i) {
-        var btn = durationBtns[i];
-        if (savedHours && btn.dataset.hour === savedHours) {
-            btn.classList.add("active");
-        }
-        btn.addEventListener("click", function () {
-            for (var j = 0; j < durationBtns.length; j++) {
-                durationBtns[j].classList.remove("active");
-            }
-            var hour = btn.dataset.hour;
-            if (!hour || !hourInput)
-                return;
-            hourInput.value = hour;
-            localStorage.setItem("rentHours", hour);
-            btn.classList.add("active");
-            regenerateTimeSlots();
-            clearFieldInCart();
-            loadVenues();
-        });
-    };
-    for (var i = 0; i < durationBtns.length; i++) {
-        _loop_1(i);
+        document
+            .querySelectorAll(".duration-btn")
+            .forEach(function (b) { return b.classList.remove("active"); });
+        (_a = document
+            .querySelector(".duration-btn[data-hour=\"".concat(savedHours, "\"]"))) === null || _a === void 0 ? void 0 : _a.classList.add("active");
+    }
+    if (savedMin && minPriceInput && priceMinRange) {
+        minPriceInput.value = savedMin;
+        priceMinRange.value = savedMin;
+    }
+    if (savedMax && maxPriceInput && priceMaxRange) {
+        maxPriceInput.value = savedMax;
+        priceMaxRange.value = savedMax;
     }
     // ============================
-    // SAVE CHANGE
+    // SAVE DATE / TIME
     // ============================
     dateInput === null || dateInput === void 0 ? void 0 : dateInput.addEventListener("change", function () {
         localStorage.setItem("rentDate", dateInput.value);
-        clearFieldInCart();
         loadVenues();
     });
     timeSlot === null || timeSlot === void 0 ? void 0 : timeSlot.addEventListener("change", function () {
         localStorage.setItem("timeSlot", timeSlot.value);
-        clearFieldInCart();
         loadVenues();
+    });
+    // ============================
+    // DURATION BUTTONS
+    // ============================
+    document
+        .querySelectorAll(".duration-btn")
+        .forEach(function (btn) {
+        btn.addEventListener("click", function () {
+            document
+                .querySelectorAll(".duration-btn")
+                .forEach(function (b) {
+                return b.classList.remove("active");
+            });
+            btn.classList.add("active");
+            var h = btn.dataset.hour || "3";
+            if (hourInput)
+                hourInput.value = h;
+            localStorage.setItem("rentHours", h);
+            loadVenues();
+        });
+    });
+    // ============================
+    // PRICE SYNC
+    // ============================
+    function syncPrice() {
+        if (!minPriceInput ||
+            !maxPriceInput ||
+            !priceMinRange ||
+            !priceMaxRange)
+            return;
+        var min = Number(priceMinRange.value);
+        var max = Number(priceMaxRange.value);
+        if (min > max)
+            min = max;
+        minPriceInput.value = min.toString();
+        maxPriceInput.value = max.toString();
+        localStorage.setItem("minPrice", min.toString());
+        localStorage.setItem("maxPrice", max.toString());
+        loadVenues();
+    }
+    priceMinRange === null || priceMinRange === void 0 ? void 0 : priceMinRange.addEventListener("input", syncPrice);
+    priceMaxRange === null || priceMaxRange === void 0 ? void 0 : priceMaxRange.addEventListener("input", syncPrice);
+    minPriceInput === null || minPriceInput === void 0 ? void 0 : minPriceInput.addEventListener("change", function () {
+        if (priceMinRange)
+            priceMinRange.value = minPriceInput.value;
+        syncPrice();
+    });
+    maxPriceInput === null || maxPriceInput === void 0 ? void 0 : maxPriceInput.addEventListener("change", function () {
+        if (priceMaxRange)
+            priceMaxRange.value = maxPriceInput.value;
+        syncPrice();
     });
     // ============================
     // LOAD BRANCH
@@ -94,13 +186,10 @@ document.addEventListener("DOMContentLoaded", function () {
     // ============================
     // SEARCH
     // ============================
-    var searchTimer;
     searchInput === null || searchInput === void 0 ? void 0 : searchInput.addEventListener("input", function () {
-        clearTimeout(searchTimer);
-        searchTimer = setTimeout(function () {
-            searchKeyword = searchInput.value.trim();
-            loadVenues();
-        }, 400);
+        searchKeyword =
+            searchInput.value.trim();
+        loadVenues();
     });
     // ============================
     // LOAD CATEGORIES
@@ -154,6 +243,14 @@ document.addEventListener("DOMContentLoaded", function () {
             "<p class=\"loading-text\">\u0E01\u0E33\u0E25\u0E31\u0E07\u0E42\u0E2B\u0E25\u0E14\u0E2A\u0E19\u0E32\u0E21...</p>";
         var venueParams = new URLSearchParams();
         venueParams.set("branch_id", selectedBranchId);
+        if (selectedCategories.length > 0)
+            venueParams.set("categories", selectedCategories.join(","));
+        if (minPriceInput === null || minPriceInput === void 0 ? void 0 : minPriceInput.value)
+            venueParams.set("min_price", minPriceInput.value);
+        if (maxPriceInput === null || maxPriceInput === void 0 ? void 0 : maxPriceInput.value)
+            venueParams.set("max_price", maxPriceInput.value);
+        if (searchKeyword !== "")
+            venueParams.set("q", searchKeyword);
         fetch("/sports_rental_system/api/get_venues.php?" +
             venueParams.toString())
             .then(function (r) { return r.json(); })
@@ -183,7 +280,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     venueGrid.innerHTML = "<p>โหลดสนามไม่สำเร็จ</p>";
                     return;
                 }
-                var _loop_2 = function (i) {
+                var _loop_1 = function (i) {
                     var item = venueRes.data[i];
                     var disabled = false;
                     for (var j = 0; j < unavailable.length; j++) {
@@ -225,128 +322,120 @@ document.addEventListener("DOMContentLoaded", function () {
                     venueGrid.appendChild(card);
                 };
                 for (var i = 0; i < venueRes.data.length; i++) {
-                    _loop_2(i);
+                    _loop_1(i);
                 }
             });
         });
     }
-    // ============================
-    // TIME SLOT
-    // ============================
-    function regenerateTimeSlots() {
-        if (!timeSlot)
+    /* ===================================================
+      CART HELPERS
+    =================================================== */
+    function getCart() {
+        try {
+            var raw = localStorage.getItem("cart");
+            if (!raw)
+                return [];
+            var parsed = JSON.parse(raw);
+            return Array.isArray(parsed) ? parsed : [];
+        }
+        catch (_a) {
+            return [];
+        }
+    }
+    function clearFieldInCart() {
+        var cart = getCart()
+            .filter(function (i) { return i.type !== "field"; });
+        localStorage.setItem("cart", JSON.stringify(cart));
+        updateCartCount();
+    }
+    function getFieldQty(id) {
+        var cart = getCart();
+        for (var i = 0; i < cart.length; i++) {
+            if (cart[i].type === "field" &&
+                String(cart[i].id) === String(id)) {
+                return cart[i].qty;
+            }
+        }
+        return 0;
+    }
+    function increaseField(field, date, time, hours) {
+        var cart = getCart();
+        for (var i = 0; i < cart.length; i++) {
+            if (cart[i].type === "field" &&
+                String(cart[i].id) ===
+                    String(field.venue_id)) {
+                alert("สนามนี้เลือกได้เพียง 1 สนามเท่านั้น");
+                return;
+            }
+        }
+        cart.push({
+            id: String(field.venue_id),
+            type: "field",
+            name: field.name,
+            price: field.price_per_hour,
+            qty: 1,
+            image: field.image_url,
+            date: date,
+            time: time,
+            hours: hours
+        });
+        localStorage.setItem("cart", JSON.stringify(cart));
+        updateCartCount();
+    }
+    function decreaseField(field) {
+        var cart = getCart();
+        for (var i = 0; i < cart.length; i++) {
+            if (cart[i].type === "field" &&
+                String(cart[i].id) ===
+                    String(field.venue_id)) {
+                cart.splice(i, 1);
+                break;
+            }
+        }
+        localStorage.setItem("cart", JSON.stringify(cart));
+        updateCartCount();
+    }
+    function updateFieldCard(card, id) {
+        var qty = getFieldQty(id);
+        var qtyText = card.querySelector(".qty-num");
+        qtyText.textContent = qty.toString();
+        if (qty > 0)
+            card.classList.add("selected");
+        else
+            card.classList.remove("selected");
+    }
+    function updateCartCount() {
+        var badge = document.getElementById("cartCount");
+        if (!badge)
             return;
-        var open = timeSlot.dataset.open;
-        var close = timeSlot.dataset.close;
-        if (!open || !close)
+        var cart = getCart();
+        var total = 0;
+        for (var i = 0; i < cart.length; i++) {
+            total += Number(cart[i].qty) || 0;
+        }
+        badge.textContent = total.toString();
+    }
+    // ===============================
+    // GENERATE TIME SLOTS
+    // ===============================
+    function generateTimeSlots(openTime, closeTime) {
+        var select = document.getElementById("timeSlot");
+        if (!select)
             return;
-        generateTimeSlots(open, close);
+        select.innerHTML =
+            "<option value=\"\">\n      \u0E40\u0E25\u0E37\u0E2D\u0E01\u0E40\u0E27\u0E25\u0E32\n    </option>";
+        var openHour = parseInt(openTime.split(":")[0]);
+        var closeHour = parseInt(closeTime.split(":")[0]);
+        var lastStartHour = closeHour - 3;
+        for (var h = openHour; h <= lastStartHour; h++) {
+            var hour = h < 10
+                ? "0" + h
+                : h.toString();
+            var opt = document.createElement("option");
+            opt.value = hour;
+            opt.textContent =
+                "".concat(hour, ":00 \u0E19.");
+            select.appendChild(opt);
+        }
     }
 });
-/* ===================================================
-  CART HELPERS
-=================================================== */
-function getCart() {
-    try {
-        var raw = localStorage.getItem("cart");
-        if (!raw)
-            return [];
-        var parsed = JSON.parse(raw);
-        return Array.isArray(parsed) ? parsed : [];
-    }
-    catch (_a) {
-        return [];
-    }
-}
-function clearFieldInCart() {
-    var cart = getCart()
-        .filter(function (i) { return i.type !== "field"; });
-    localStorage.setItem("cart", JSON.stringify(cart));
-    updateCartCount();
-}
-function getFieldQty(id) {
-    var cart = getCart();
-    for (var i = 0; i < cart.length; i++) {
-        if (cart[i].type === "field" &&
-            String(cart[i].id) === String(id)) {
-            return cart[i].qty;
-        }
-    }
-    return 0;
-}
-function increaseField(field, date, time, hours) {
-    var cart = getCart();
-    for (var i = 0; i < cart.length; i++) {
-        if (cart[i].type === "field" &&
-            String(cart[i].id) ===
-                String(field.venue_id)) {
-            alert("สนามนี้เลือกได้เพียง 1 สนามเท่านั้น");
-            return;
-        }
-    }
-    cart.push({
-        id: String(field.venue_id),
-        type: "field",
-        name: field.name,
-        price: field.price_per_hour,
-        qty: 1,
-        image: field.image_url,
-        date: date,
-        time: time,
-        hours: hours
-    });
-    localStorage.setItem("cart", JSON.stringify(cart));
-    updateCartCount();
-}
-function decreaseField(field) {
-    var cart = getCart();
-    for (var i = 0; i < cart.length; i++) {
-        if (cart[i].type === "field" &&
-            String(cart[i].id) ===
-                String(field.venue_id)) {
-            cart.splice(i, 1);
-            break;
-        }
-    }
-    localStorage.setItem("cart", JSON.stringify(cart));
-    updateCartCount();
-}
-function updateFieldCard(card, id) {
-    var qty = getFieldQty(id);
-    var qtyText = card.querySelector(".qty-num");
-    qtyText.textContent = qty.toString();
-    if (qty > 0)
-        card.classList.add("selected");
-    else
-        card.classList.remove("selected");
-}
-function updateCartCount() {
-    var badge = document.getElementById("cartCount");
-    if (!badge)
-        return;
-    var cart = getCart();
-    var total = 0;
-    for (var i = 0; i < cart.length; i++) {
-        total += Number(cart[i].qty) || 0;
-    }
-    badge.textContent = total.toString();
-}
-function generateTimeSlots(openTime, closeTime) {
-    var _a;
-    var select = document.getElementById("timeSlot");
-    if (!select)
-        return;
-    select.innerHTML =
-        "<option value=\"\">\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E40\u0E27\u0E25\u0E32</option>";
-    var openHour = parseInt(openTime.split(":")[0]);
-    var closeHour = parseInt(closeTime.split(":")[0]);
-    var hours = Number((_a = document.getElementById("rentHours")) === null || _a === void 0 ? void 0 : _a.value) || 3;
-    var lastStartHour = closeHour - hours;
-    for (var h = openHour; h <= lastStartHour; h++) {
-        var hour = h < 10 ? "0" + h : h.toString();
-        var opt = document.createElement("option");
-        opt.value = hour;
-        opt.textContent = "".concat(hour, ":00 \u0E19.");
-        select.appendChild(opt);
-    }
-}

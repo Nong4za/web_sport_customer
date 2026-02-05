@@ -4,7 +4,12 @@ document.addEventListener("DOMContentLoaded", function () {
     renderBookingSummary();
     var confirmBtn = document.getElementById("confirmBtn");
     confirmBtn === null || confirmBtn === void 0 ? void 0 : confirmBtn.addEventListener("click", function () {
-        alert("ขั้นตอนถัดไป: หน้ายืนยันการเช่า (confirm)");
+        var cart = getCart();
+        if (cart.length === 0) {
+            alert("ไม่มีรายการในตะกร้า");
+            return;
+        }
+        window.location.href = "confirm.html";
     });
 });
 /* ===============================
@@ -38,7 +43,7 @@ function renderCart() {
     updateCartCount(totalQty);
 }
 /* ===============================
-   SUMMARY BAR
+    SUMMARY BAR
 ================================ */
 function renderBookingSummary() {
     var date = localStorage.getItem("rentDate");
@@ -87,7 +92,7 @@ fetch("/sports_rental_system/api/get_profile.php")
     }
 });
 /* ===============================
-   BUILD ITEM ROW (NO +/-)
+    BUILD ITEM ROW (NO +/-)
 ================================ */
 function buildCartRow(item) {
     var row = document.createElement("div");

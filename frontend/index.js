@@ -24,6 +24,53 @@ document.addEventListener("DOMContentLoaded", function () {
     var priceMinRange = document.getElementById("priceMin");
     var priceMaxRange = document.getElementById("priceMax");
     // ============================
+    // RESET FILTERS
+    // ============================
+    var resetBtn = document.getElementById("resetFilters");
+    // RESET BUTTON CLICK
+    resetBtn === null || resetBtn === void 0 ? void 0 : resetBtn.addEventListener("click", function () {
+        console.log("RESET FILTERS");
+        // ===== STATE =====
+        selectedCategories = [];
+        searchKeyword = "";
+        // ===== DATE / TIME / HOURS =====
+        if (dateInput)
+            dateInput.value = "";
+        if (timeSlot)
+            timeSlot.value = "";
+        if (hourInput)
+            hourInput.value = "";
+        document
+            .querySelectorAll(".duration-btn")
+            .forEach(function (b) { return b.classList.remove("active"); });
+        // ===== CATEGORY =====
+        categoryBox === null || categoryBox === void 0 ? void 0 : categoryBox.querySelectorAll("input[type=checkbox]").forEach(function (cb) { return (cb.checked = false); });
+        // ===== PRICE =====
+        var defaultMin = (priceMinRange === null || priceMinRange === void 0 ? void 0 : priceMinRange.min) || "0";
+        var defaultMax = (priceMaxRange === null || priceMaxRange === void 0 ? void 0 : priceMaxRange.max) || "5000";
+        if (minPriceInput)
+            minPriceInput.value = defaultMin;
+        if (maxPriceInput)
+            maxPriceInput.value = defaultMax;
+        if (priceMinRange)
+            priceMinRange.value = defaultMin;
+        if (priceMaxRange)
+            priceMaxRange.value = defaultMax;
+        // ===== SEARCH =====
+        if (searchInput)
+            searchInput.value = "";
+        // ===== STORAGE =====
+        localStorage.removeItem("rentDate");
+        localStorage.removeItem("timeSlot");
+        localStorage.removeItem("rentHours");
+        localStorage.removeItem("minPrice");
+        localStorage.removeItem("maxPrice");
+        // // ถ้าอยาก clear field ใน cart ด้วย
+        // clearFieldInCart();
+        // ===== reload =====
+        loadEquipment();
+    });
+    // ============================
     // RESTORE DATE / TIME / HOURS
     // ============================
     var savedDate = localStorage.getItem("rentDate");

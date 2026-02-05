@@ -37,70 +37,232 @@ document.addEventListener("DOMContentLoaded", () => {
   const searchInput =
     document.getElementById("searchInput") as HTMLInputElement | null;
 
+  // ===== PRICE RANGE ======
+
+  const minPriceInput =
+    document.getElementById("minPriceInput") as HTMLInputElement | null;
+
+  const maxPriceInput =
+    document.getElementById("maxPriceInput") as HTMLInputElement | null;
+
+  const priceMinRange =
+    document.getElementById("priceMin") as HTMLInputElement | null;
+
+  const priceMaxRange =
+    document.getElementById("priceMax") as HTMLInputElement | null;
+
+// ============================
+// RESET FILTERS
+// ============================
+  const resetBtn =
+  document.getElementById("resetFilters") as HTMLButtonElement | null;
+
+  // RESET BUTTON CLICK
+  resetBtn?.addEventListener("click", () => {
+
+  console.log("RESET FILTERS");
+
+  // ===== STATE =====
+  selectedCategories = [];
+  searchKeyword = "";
+
+  // ===== DATE / TIME / HOURS =====
+  if (dateInput) dateInput.value = "";
+  if (timeSlot) timeSlot.value = "";
+  if (hourInput) hourInput.value = "";
+
+  document
+    .querySelectorAll(".duration-btn")
+    .forEach(b => b.classList.remove("active"));
+
+  // ===== CATEGORY =====
+  categoryBox
+    ?.querySelectorAll<HTMLInputElement>(
+      "input[type=checkbox]"
+    )
+    .forEach(cb => (cb.checked = false));
+
+  // ===== PRICE =====
+  const defaultMin =
+    priceMinRange?.min || "0";
+
+  const defaultMax =
+    priceMaxRange?.max || "5000";
+
+  if (minPriceInput) minPriceInput.value = defaultMin;
+  if (maxPriceInput) maxPriceInput.value = defaultMax;
+
+  if (priceMinRange) priceMinRange.value = defaultMin;
+  if (priceMaxRange) priceMaxRange.value = defaultMax;
+
+  // ===== SEARCH =====
+  if (searchInput) searchInput.value = "";
+
+  // ===== STORAGE =====
+  localStorage.removeItem("rentDate");
+  localStorage.removeItem("timeSlot");
+  localStorage.removeItem("rentHours");
+  localStorage.removeItem("minPrice");
+  localStorage.removeItem("maxPrice");
+
+  // // ถ้าอยาก clear field ใน cart ด้วย
+  // clearFieldInCart();
+  // ===== reload =====
+  loadVenues();
+
+});
+
+
   // ============================
   // RESTORE
   // ============================
 
-  const savedDate = localStorage.getItem("rentDate");
-  const savedTime = localStorage.getItem("timeSlot");
-  const savedHours = localStorage.getItem("rentHours");
+  const savedDate =
+    localStorage.getItem("rentDate");
 
-  if (savedDate && dateInput) dateInput.value = savedDate;
-  if (savedHours && hourInput) hourInput.value = savedHours;
+  const savedTime =
+    localStorage.getItem("timeSlot");
+
+  const savedHours =
+    localStorage.getItem("rentHours");
+
+  const savedMin = localStorage.getItem("minPrice");
+  const savedMax = localStorage.getItem("maxPrice");;
+
+  if (savedDate && dateInput)
+    dateInput.value = savedDate;
+
+  if (savedHours && hourInput) {
+
+    hourInput.value = savedHours;
+
+    document
+      .querySelectorAll(".duration-btn")
+      .forEach(b => b.classList.remove("active"));
+
+    document
+      .querySelector(
+        `.duration-btn[data-hour="${savedHours}"]`
+      )
+      ?.classList.add("active");
+  }
+
+
+  if (savedMin && minPriceInput && priceMinRange) {
+    minPriceInput.value = savedMin;
+    priceMinRange.value = savedMin;
+  }
+
+  if (savedMax && maxPriceInput && priceMaxRange) {
+    maxPriceInput.value = savedMax;
+    priceMaxRange.value = savedMax;
+  }
+
+
+  // ============================
+  // SAVE DATE / TIME
+  // ============================
+
+  dateInput?.addEventListener("change", () => {
+
+    localStorage.setItem(
+      "rentDate",
+      dateInput.value
+    );
+
+    loadVenues();
+  });
+
+  timeSlot?.addEventListener("change", () => {
+
+    localStorage.setItem(
+      "timeSlot",
+      timeSlot.value
+    );
+
+    loadVenues();
+  });
 
   // ============================
   // DURATION BUTTONS
   // ============================
 
-  const durationBtns =
-    document.querySelectorAll(".duration-btn");
+  document
+    .querySelectorAll<HTMLButtonElement>(".duration-btn")
+    .forEach(btn => {
 
-  for (let i = 0; i < durationBtns.length; i++) {
+      btn.addEventListener("click", () => {
 
-    const btn = durationBtns[i] as HTMLButtonElement;
+        document
+          .querySelectorAll(".duration-btn")
+          .forEach(b =>
+            b.classList.remove("active")
+          );
 
-    if (savedHours && btn.dataset.hour === savedHours) {
-      btn.classList.add("active");
-    }
+        btn.classList.add("active");
 
-    btn.addEventListener("click", () => {
+        const h =
+          btn.dataset.hour || "3";
 
-      for (let j = 0; j < durationBtns.length; j++) {
-        durationBtns[j].classList.remove("active");
-      }
+        if (hourInput)
+          hourInput.value = h;
 
-      const hour = btn.dataset.hour;
+        localStorage.setItem(
+          "rentHours",
+          h
+        );
 
-      if (!hour || !hourInput) return;
-
-      hourInput.value = hour;
-      localStorage.setItem("rentHours", hour);
-
-      btn.classList.add("active");
-
-      regenerateTimeSlots();
-      clearFieldInCart();
-      loadVenues();
+        loadVenues();
+      });
 
     });
 
+  // ============================
+  // PRICE SYNC
+  // ============================
+
+
+  function syncPrice() {
+
+    if (
+      !minPriceInput ||
+      !maxPriceInput ||
+      !priceMinRange ||
+      !priceMaxRange
+    ) return;
+
+    let min = Number(priceMinRange.value);
+    let max = Number(priceMaxRange.value);
+
+    if (min > max) min = max;
+
+    minPriceInput.value = min.toString();
+    maxPriceInput.value = max.toString();
+
+    localStorage.setItem("minPrice", min.toString());
+    localStorage.setItem("maxPrice", max.toString());
+
+    loadVenues();
   }
 
-  // ============================
-  // SAVE CHANGE
-  // ============================
+  priceMinRange?.addEventListener("input", syncPrice);
+  priceMaxRange?.addEventListener("input", syncPrice);
 
-  dateInput?.addEventListener("change", () => {
-    localStorage.setItem("rentDate", dateInput.value);
-    clearFieldInCart();
-    loadVenues();
+  minPriceInput?.addEventListener("change", () => {
+    if (priceMinRange)
+      priceMinRange.value = minPriceInput.value;
+
+    syncPrice();
   });
 
-  timeSlot?.addEventListener("change", () => {
-    localStorage.setItem("timeSlot", timeSlot.value);
-    clearFieldInCart();
-    loadVenues();
+  maxPriceInput?.addEventListener("change", () => {
+    if (priceMaxRange)
+      priceMaxRange.value = maxPriceInput.value;
+
+    syncPrice();
   });
+
+
 
   // ============================
   // LOAD BRANCH
@@ -145,19 +307,14 @@ document.addEventListener("DOMContentLoaded", () => {
   // SEARCH
   // ============================
 
-  let searchTimer: any;
-
   searchInput?.addEventListener("input", () => {
 
-    clearTimeout(searchTimer);
+    searchKeyword =
+      searchInput.value.trim();
 
-    searchTimer = setTimeout(() => {
-      searchKeyword = searchInput.value.trim();
-      loadVenues();
-    }, 400);
+    loadVenues();
 
   });
-
   // ============================
   // LOAD CATEGORIES
   // ============================
@@ -243,7 +400,23 @@ document.addEventListener("DOMContentLoaded", () => {
       `<p class="loading-text">กำลังโหลดสนาม...</p>`;
 
     const venueParams = new URLSearchParams();
+
     venueParams.set("branch_id", selectedBranchId);
+
+    if (selectedCategories.length > 0)
+      venueParams.set(
+        "categories",
+        selectedCategories.join(",")
+      );
+    
+    if (minPriceInput?.value)
+      venueParams.set("min_price", minPriceInput.value);
+
+    if (maxPriceInput?.value)
+      venueParams.set("max_price", maxPriceInput.value);
+
+    if (searchKeyword !== "")
+      venueParams.set("q", searchKeyword);
 
     fetch(
       "/sports_rental_system/api/get_venues.php?" +
@@ -378,27 +551,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   }
 
-  // ============================
-  // TIME SLOT
-  // ============================
-
-  function regenerateTimeSlots() {
-
-    if (!timeSlot) return;
-
-    const open =
-      (timeSlot as any).dataset.open;
-
-    const close =
-      (timeSlot as any).dataset.close;
-
-    if (!open || !close) return;
-
-    generateTimeSlots(open, close);
-
-  }
-
-});
 
 /* ===================================================
   CART HELPERS
@@ -546,46 +698,66 @@ function updateCartCount() {
 
 }
 
+// ===============================
+// GENERATE TIME SLOTS
+// ===============================
+
+
 function generateTimeSlots(
   openTime: string,
   closeTime: string
 ) {
 
   const select =
-    document.getElementById("timeSlot") as HTMLSelectElement | null;
+    document.getElementById(
+      "timeSlot"
+    ) as HTMLSelectElement | null;
 
-  if (!select) return;
+  if (!select)
+    return;
 
   select.innerHTML =
-    `<option value="">เลือกเวลา</option>`;
+    `<option value="">
+      เลือกเวลา
+    </option>`;
 
   const openHour =
-    parseInt(openTime.split(":")[0]);
+    parseInt(
+      openTime.split(":")[0]
+    );
 
   const closeHour =
-    parseInt(closeTime.split(":")[0]);
-
-  const hours =
-    Number(
-      (document.getElementById("rentHours") as HTMLInputElement)?.value
-    ) || 3;
+    parseInt(
+      closeTime.split(":")[0]
+    );
 
   const lastStartHour =
-    closeHour - hours;
+    closeHour - 3;
 
-  for (let h = openHour; h <= lastStartHour; h++) {
+  for (
+    let h = openHour;
+    h <= lastStartHour;
+    h++
+  ) {
 
     const hour =
-      h < 10 ? "0" + h : h.toString();
+      h < 10
+        ? "0" + h
+        : h.toString();
 
     const opt =
-      document.createElement("option");
+      document.createElement(
+        "option"
+      );
 
     opt.value = hour;
-    opt.textContent = `${hour}:00 น.`;
+
+    opt.textContent =
+      `${hour}:00 น.`;
 
     select.appendChild(opt);
 
   }
 
 }
+});

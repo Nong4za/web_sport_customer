@@ -128,9 +128,9 @@
 
                 </div>
             </section>
-
-            </section>
-
+            <button id="resetFilters" class="reset-btn">
+                รีเซ็ตตัวกรอง
+            </button>
         </aside>
 
         <!-- CONTENT -->
@@ -152,12 +152,7 @@
             <div class="grid" id="venueGrid">
                 <p class="loading-text">กำลังโหลดสนาม...</p>
             </div>
-
-    </div>
-
-
-
-    </main>
+        </main>
 
     </div>
 
@@ -169,7 +164,6 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/th.js"></script>
 
     <script>
-
         const today = new Date();
         const tomorrow = new Date();
         tomorrow.setDate(today.getDate() + 1);
@@ -179,8 +173,25 @@
             dateFormat: "d/m/Y",
             enable: [today, tomorrow]
         });
-
     </script>
+
+    <template id="equipmentCardTemplate">
+        <div class="equipment-card">
+
+            <img src="">
+            <h5 class="name"></h5>
+            <p class="price"></p>
+
+            <div class="card-qty-controls">
+                <button class="qty-minus">−</button>
+                <span class="qty-num">0</span>
+                <button class="qty-plus">+</button>
+            </div>
+
+            <span class="stock"></span>
+
+        </div>
+    </template>
 
 </body>
 
