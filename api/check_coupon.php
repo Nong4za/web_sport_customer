@@ -5,6 +5,16 @@ require_once "database.php";
 header("Content-Type: application/json; charset=utf-8");
 
 /* ===============================
+   READ JSON INPUT
+================================ */
+
+$input = json_decode(file_get_contents("php://input"), true);
+
+$code  = trim($input["code"] ?? "");
+$total = floatval($input["total"] ?? 0);
+$cart  = $input["cart"] ?? [];
+
+/* ===============================
    CHECK LOGIN
 ================================ */
 
@@ -19,23 +29,20 @@ if (!$customerId) {
 }
 
 /* ===============================
-   INPUT
+   VALIDATE INPUT
 ================================ */
 
-$code  = $_GET["code"] ?? "";
-$total = isset($_GET["total"]) ? floatval($_GET["total"]) : 0;
-
-$nowDate = date("Y-m-d");
-$nowTime = date("H:i:s");
-$today   = date("Y-m-d");
-
-if (!$code) {
+if ($code === "") {
     echo json_encode([
         "success" => false,
         "message" => "กรุณาใส่รหัสคูปอง"
     ]);
     exit;
 }
+
+$nowDate = date("Y-m-d");
+$nowTime = date("H:i:s");
+$today   = date("Y-m-d");
 
 /* ===============================
    LOAD CUSTOMER
@@ -48,6 +55,7 @@ $stmt = $conn->prepare("
 ");
 $stmt->bind_param("s", $customerId);
 $stmt->execute();
+
 $user = $stmt->get_result()->fetch_assoc();
 
 if (!$user) {
@@ -70,6 +78,7 @@ $stmt = $conn->prepare("
 ");
 $stmt->bind_param("s", $code);
 $stmt->execute();
+
 $coupon = $stmt->get_result()->fetch_assoc();
 
 if (!$coupon) {
@@ -84,7 +93,7 @@ if (!$coupon) {
    ACTIVE
 ================================ */
 
-if ($coupon["is_active"] != 1) {
+if ((int)$coupon["is_active"] !== 1) {
     echo json_encode([
         "success" => false,
         "message" => "คูปองนี้ไม่เปิดใช้งาน"
@@ -135,8 +144,8 @@ if ($coupon["start_time"] && $coupon["end_time"]) {
 ================================ */
 
 if (
-    $coupon["min_purchase"] > 0 &&
-    $total < $coupon["min_purchase"]
+    floatval($coupon["min_purchase"]) > 0 &&
+    $total < floatval($coupon["min_purchase"])
 ) {
     echo json_encode([
         "success" => false,
@@ -152,12 +161,12 @@ if (
    CUSTOMER TYPE
 ================================ */
 
-if (
-    !empty($coupon["allowed_customer_type"]) &&
-    $coupon["allowed_customer_type"] !== "all"
-) {
+if (!empty($coupon["allowed_customer_type"])) {
 
-    if ($coupon["allowed_customer_type"] !== $user["customer_type"]) {
+    $couponType = strtolower(trim($coupon["allowed_customer_type"]));
+    $userType   = strtolower(trim($user["customer_type"]));
+
+    if ($couponType !== "all" && $couponType !== $userType) {
 
         echo json_encode([
             "success" => false,
@@ -169,14 +178,13 @@ if (
     }
 }
 
+
 /* ===============================
    MEMBER LEVEL
 ================================ */
 
-if (
-    !empty($coupon["allowed_member_level"]) &&
-    $coupon["allowed_member_level"] !== "all"
-) {
+if (!empty($coupon["allowed_member_level"]) &&
+    $coupon["allowed_member_level"] !== "all") {
 
     if ($coupon["allowed_member_level"] !== $user["member_level"]) {
 
@@ -187,34 +195,6 @@ if (
                 $coupon["allowed_member_level"]
         ]);
         exit;
-    }
-}
-
-/* ===============================
-   CATEGORY CHECK (OPTIONAL)
-================================
-   frontend ต้องส่ง cart มาแบบ JSON POST
-================================ */
-
-$input = json_decode(file_get_contents("php://input"), true);
-$cart  = $input["cart"] ?? [];
-
-if (!empty($coupon["category_id"]) && $cart) {
-
-    foreach ($cart as $item) {
-
-        if (
-            !isset($item["category_id"]) ||
-            $item["category_id"] != $coupon["category_id"]
-        ) {
-
-            echo json_encode([
-                "success" => false,
-                "message" =>
-                    "คูปองนี้ใช้ได้เฉพาะหมวดกีฬาที่กำหนด"
-            ]);
-            exit;
-        }
     }
 }
 
@@ -287,7 +267,7 @@ if (!empty($coupon["per_user_daily_limit"])) {
 ================================ */
 
 if (
-    $coupon["usage_limit"] &&
+    !empty($coupon["usage_limit"]) &&
     $coupon["used_count"] >= $coupon["usage_limit"]
 ) {
 
@@ -300,16 +280,49 @@ if (
 }
 
 /* ===============================
+   CATEGORY CHECK
+================================ */
+if (!empty($coupon["category_id"]) && !empty($cart)) {
+
+    $allowed = (int)$coupon["category_id"];
+    $matched = false;
+
+    foreach ($cart as $item) {
+
+        if (
+            isset($item["category_id"]) &&
+            (int)$item["category_id"] === $allowed
+        ) {
+            $matched = true;
+            break;
+        }
+    }
+
+    if (!$matched) {
+
+        echo json_encode([
+            "success" => false,
+            "message" =>
+                "คูปองนี้ใช้ได้เฉพาะหมวดกีฬาที่กำหนด"
+        ]);
+        exit;
+    }
+}
+
+
+/* ===============================
    SUCCESS
 ================================ */
 
 echo json_encode([
     "success" => true,
-    "discount" => (int)$coupon["discount_value"],
+    "discount" => (float)$coupon["discount_value"],
     "type"     => $coupon["discount_type"],
     "name"     => $coupon["name"],
     "min_purchase" =>
-        (int)$coupon["min_purchase"]
+        (float)$coupon["min_purchase"]
 ]);
 
 $conn->close();
+
+

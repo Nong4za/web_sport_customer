@@ -652,7 +652,9 @@ function increaseCartItem(
       qty: 1,
       image:
         item.image_url,
-      stock: maxStock
+      stock: maxStock,
+
+      category_id: item.category_id
     });
 
   } else {

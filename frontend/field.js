@@ -377,7 +377,8 @@ document.addEventListener("DOMContentLoaded", function () {
             image: field.image_url,
             date: date,
             time: time,
-            hours: hours
+            hours: hours,
+            category_id: field.category_id
         });
         localStorage.setItem("cart", JSON.stringify(cart));
         updateCartCount();

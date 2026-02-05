@@ -47,7 +47,8 @@ SELECT
     v.name,
     v.image_url,
     v.price_per_hour,
-    v.type
+    v.type,
+    v.category_id
 FROM venues v
 WHERE v.is_active = 1
 ";

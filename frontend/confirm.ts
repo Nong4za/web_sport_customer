@@ -1,7 +1,11 @@
 let USER_POINTS = 0;
 let usedPoints = 0;
 let couponDiscount = 0;
+
+// 🔵 baseTotal = ของใน cart อย่างเดียว
 let baseTotal = 0;
+
+// 🔵 ค่าชั่วโมงเพิ่ม
 let extraHourFee = 0;
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -157,14 +161,13 @@ function calcBaseTotal(): void {
     extraHourFee =
         calcExtraHourFee(hours);
 
-    baseTotal += extraHourFee;
-
     updateTotals();
-
 }
-// ===============================
-// UPDATE TOTAL DISPLAY
-//================================
+
+/* ===============================
+   UPDATE TOTAL DISPLAY
+================================ */
+
 function updateTotals(): void {
 
     const gross =
@@ -193,14 +196,6 @@ function updateTotals(): void {
     document.getElementById("earnPoints")!.textContent =
         Math.floor(gross / 100).toString();
 
-    const extraEl =
-        document.getElementById("extraHourFee");
-
-    if (extraEl) {
-        extraEl.textContent =
-            extraHourFee + " บาท";
-    }
-
 }
 
 /* ===============================
@@ -214,11 +209,15 @@ function bindPointControls(): void {
 
     if (!input) return;
 
+    const getGross = () => baseTotal + extraHourFee;
+
     document.getElementById("plusPoint")
         ?.addEventListener("click", () => {
 
-            if (usedPoints < USER_POINTS &&
-                usedPoints < baseTotal) {
+            if (
+                usedPoints < USER_POINTS &&
+                usedPoints < getGross()
+            ) {
 
                 usedPoints++;
                 input.value = usedPoints.toString();
@@ -245,7 +244,7 @@ function bindPointControls(): void {
         ?.addEventListener("click", () => {
 
             usedPoints =
-                Math.min(USER_POINTS, baseTotal);
+                Math.min(USER_POINTS, getGross());
 
             input.value =
                 usedPoints.toString();
@@ -262,9 +261,7 @@ function bindPointControls(): void {
 
 function bindCoupon(): void {
 
-    const btn =
-        document.getElementById("applyCoupon");
-
+    const btn = document.getElementById("applyCoupon");
     if (!btn) return;
 
     btn.addEventListener("click", () => {
@@ -274,16 +271,25 @@ function bindCoupon(): void {
 
         if (!input) return;
 
-        const code =
-            input.value.trim();
-
+        const code = input.value.trim();
         if (!code) return;
 
-        fetch(
-            "/sports_rental_system/api/check_coupon.php" +
-            "?code=" + encodeURIComponent(code) +
-            "&total=" + baseTotal
-        )
+        const gross =
+            baseTotal + extraHourFee;
+
+        const cart = getCart(); // 🔥 สำคัญมาก
+
+        fetch("/sports_rental_system/api/check_coupon.php", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                code: code,
+                total: gross,
+                cart: cart
+            })
+        })
             .then(r => r.json())
             .then((res: any) => {
 
@@ -294,26 +300,20 @@ function bindCoupon(): void {
 
                 if (!res.success) {
 
-                    msg.textContent =
-                        res.message;
-
-                    msg.className =
-                        "msg error";
+                    msg.textContent = res.message;
+                    msg.className = "msg error";
 
                     couponDiscount = 0;
                     updateTotals();
-
                     return;
-
                 }
 
                 if (res.type === "percent") {
 
                     couponDiscount =
                         Math.floor(
-                            baseTotal *
-                            Number(res.discount) /
-                            100
+                            gross *
+                            Number(res.discount) / 100
                         );
 
                 } else {
@@ -330,13 +330,11 @@ function bindCoupon(): void {
                     "msg success";
 
                 updateTotals();
-
             });
 
     });
 
 }
-
 /* ===============================
    SUBMIT
 ================================ */

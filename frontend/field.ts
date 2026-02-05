@@ -629,7 +629,8 @@ function increaseField(
     image: field.image_url,
     date,
     time,
-    hours
+    hours,
+    category_id: field.category_id
   });
 
   localStorage.setItem("cart", JSON.stringify(cart));

@@ -1,7 +1,9 @@
 var USER_POINTS = 0;
 var usedPoints = 0;
 var couponDiscount = 0;
+// 🔵 baseTotal = ของใน cart อย่างเดียว
 var baseTotal = 0;
+// 🔵 ค่าชั่วโมงเพิ่ม
 var extraHourFee = 0;
 document.addEventListener("DOMContentLoaded", function () {
     loadProfile();
@@ -102,12 +104,11 @@ function calcBaseTotal() {
     var hours = Number(localStorage.getItem("rentHours") || 0);
     extraHourFee =
         calcExtraHourFee(hours);
-    baseTotal += extraHourFee;
     updateTotals();
 }
-// ===============================
-// UPDATE TOTAL DISPLAY
-//================================
+/* ===============================
+   UPDATE TOTAL DISPLAY
+================================ */
 function updateTotals() {
     var gross = baseTotal + extraHourFee;
     var net = Math.max(gross -
@@ -123,11 +124,6 @@ function updateTotals() {
         net + " บาท";
     document.getElementById("earnPoints").textContent =
         Math.floor(gross / 100).toString();
-    var extraEl = document.getElementById("extraHourFee");
-    if (extraEl) {
-        extraEl.textContent =
-            extraHourFee + " บาท";
-    }
 }
 /* ===============================
     POINT CONTROL
@@ -137,9 +133,10 @@ function bindPointControls() {
     var input = document.getElementById("usePointInput");
     if (!input)
         return;
+    var getGross = function () { return baseTotal + extraHourFee; };
     (_a = document.getElementById("plusPoint")) === null || _a === void 0 ? void 0 : _a.addEventListener("click", function () {
         if (usedPoints < USER_POINTS &&
-            usedPoints < baseTotal) {
+            usedPoints < getGross()) {
             usedPoints++;
             input.value = usedPoints.toString();
             updateTotals();
@@ -154,7 +151,7 @@ function bindPointControls() {
     });
     (_c = document.getElementById("useMaxPoint")) === null || _c === void 0 ? void 0 : _c.addEventListener("click", function () {
         usedPoints =
-            Math.min(USER_POINTS, baseTotal);
+            Math.min(USER_POINTS, getGross());
         input.value =
             usedPoints.toString();
         updateTotals();
@@ -174,28 +171,35 @@ function bindCoupon() {
         var code = input.value.trim();
         if (!code)
             return;
-        fetch("/sports_rental_system/api/check_coupon.php" +
-            "?code=" + encodeURIComponent(code) +
-            "&total=" + baseTotal)
+        var gross = baseTotal + extraHourFee;
+        var cart = getCart(); // 🔥 สำคัญมาก
+        fetch("/sports_rental_system/api/check_coupon.php", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                code: code,
+                total: gross,
+                cart: cart
+            })
+        })
             .then(function (r) { return r.json(); })
             .then(function (res) {
             var msg = document.getElementById("couponMsg");
             if (!msg)
                 return;
             if (!res.success) {
-                msg.textContent =
-                    res.message;
-                msg.className =
-                    "msg error";
+                msg.textContent = res.message;
+                msg.className = "msg error";
                 couponDiscount = 0;
                 updateTotals();
                 return;
             }
             if (res.type === "percent") {
                 couponDiscount =
-                    Math.floor(baseTotal *
-                        Number(res.discount) /
-                        100);
+                    Math.floor(gross *
+                        Number(res.discount) / 100);
             }
             else {
                 couponDiscount =

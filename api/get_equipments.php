@@ -48,6 +48,7 @@ SELECT
     em.name,
     em.image_url,
     em.price_per_unit,
+    em.category_id,
     COUNT(ei.instance_code) AS available_stock
 FROM equipment_master em
 LEFT JOIN equipment_instances ei 
