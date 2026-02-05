@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>คูปอง | ระบบเช่าอุปกรณ์กีฬา</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/coupon.css" />
+</head>
+
+<body>
+
+    <!-- CLOSE -->
+    <button class="close-btn" onclick="goBack()">✖</button>
+
+    <!-- TITLE -->
+    <div class="page-header">คูปองที่ใช้ได้</div>
+
+    <!-- CONTENT -->
+    <div class="container">
+        <div id="couponGrid" class="coupon-grid">
+            <div class="loading">กำลังโหลดคูปอง...</div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "/sports_rental_system/api/get_coupon.php";
+
+        function goBack() {
+            window.location.href = "index.html";
+        }
+
+        fetch(API_URL)
+            .then(res => res.json())
+            .then(res => {
+
+                const grid = document.getElementById("couponGrid");
+                grid.innerHTML = "";
+
+                if (!res.success || res.data.length === 0) {
+                    grid.innerHTML = "<p>ไม่มีคูปอง</p>";
+                    return;
+                }
+
+                res.data.forEach(coupon => {
+
+                    const expired =
+                        coupon.is_active == 0 ||
+                        (coupon.expiry_date &&
+                            new Date(coupon.expiry_date) < new Date());
+
+                    const card = document.createElement("div");
+                    card.className = "coupon-card" + (expired ? " disabled" : "");
+
+                    const discountText =
+                        coupon.discount_type === "percent"
+                            ? `ลด ${coupon.discount_value}%`
+                            : `ลด ${coupon.discount_value} บาท`;
+
+                    card.innerHTML = `
+            <div class="coupon-top">
+              <span class="coupon-code">
+                ${coupon.code}
+                <svg class="copy-icon" data-code="${coupon.code}"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+              </span>
+              <span class="discount-pill">${discountText}</span>
+            </div>
+
+            <p class="desc">${coupon.name}</p>
+
+            <ul>
+              <li>ขั้นต่ำ ${coupon.min_purchase} บาท</li>
+              <li>หมดอายุ ${coupon.expiry_date}</li>
+            </ul>
+          `;
+
+                    grid.appendChild(card);
+                });
+
+                document.querySelectorAll(".copy-icon").forEach(icon => {
+                    icon.addEventListener("click", async e => {
+
+                        e.stopPropagation();
+
+                        const code = icon.dataset.code;
+
+                        try {
+                            await navigator.clipboard.writeText(code);
+                            alert("คัดลอกโค้ดแล้ว: " + code);
+                            window.location.href = "index.html";
+                        } catch {
+                            alert("ไม่สามารถคัดลอกโค้ดได้");
+                        }
+
+                    });
+                });
+
+            })
+            .catch(err => {
+                console.error(err);
+                document.getElementById("couponGrid").innerHTML =
+                    "<p>โหลดคูปองไม่สำเร็จ</p>";
+            });
+    </script>
+
+</body>
+
+</html>

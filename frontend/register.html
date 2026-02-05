@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>ระบบจองอุปกรณ์กีฬา</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+
+
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: "Noto Sans Thai", Tahoma, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            background: #f5f6f8;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .login-card {
+            background: #fff;
+            width: 400px;
+            padding: 30px 28px 25px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+            text-align: center;
+        }
+
+        /* ---------- HEADER ---------- */
+
+        .logo {
+            width: 70px;
+            height: 70px;
+            background: #ff7a00;
+            border-radius: 16px;
+            margin: 0 auto 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 32px;
+            font-weight: bold;
+        }
+
+        h2 {
+            margin: 10px 0 22px;
+            color: #ff7a00;
+            font-size: 18px;
+        }
+
+        /* ---------- FORM ---------- */
+
+        .form-group {
+            text-align: left;
+            margin-bottom: 14px;
+        }
+
+        label {
+            font-size: 14px;
+            margin-bottom: 6px;
+            display: block;
+            color: #333;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 11px 12px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            outline: none;
+            font-size: 14px;
+            background: white;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: #ff7a00;
+        }
+
+        /* row layout */
+        .row {
+            display: flex;
+            gap: 12px;
+        }
+
+        .row .form-group {
+            flex: 1;
+        }
+
+        /* ---------- BUTTON ---------- */
+
+        .btn-login {
+            margin-top: 8px;
+            width: 100%;
+            border: none;
+            background: #ff7a00;
+            color: white;
+            padding: 13px;
+            font-size: 15px;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        .btn-login:hover {
+            background: #e56e00;
+        }
+
+        /* ---------- FOOTER TEXT ---------- */
+
+        .description {
+            margin-top: 16px;
+            font-size: 12px;
+            color: #888;
+            line-height: 1.5;
+        }
+
+        .back-login {
+            margin-bottom: 10px;
+            text-align: left;
+        }
+
+        .back-login a {
+            color: #888;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .back-login a:hover {
+            text-decoration: underline;
+            color: #888;
+        }
+
+        /* ---------- PASSWORD TOGGLE ---------- */
+        .password-wrapper {
+            position: relative;
+        }
+
+        .password-wrapper input {
+            padding-right: 42px;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            opacity: 0.6;
+        }
+
+        .toggle-password:hover {
+            opacity: 1;
+        }
+
+
+
+
+        /* ---------- RESPONSIVE ---------- */
+
+        @media (max-width: 480px) {
+            .login-card {
+                width: 90%;
+            }
+
+            .row {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="login-card">
+        <div class="back-login">
+            <a href="login.html">← กลับไปหน้าเข้าสู่ระบบ</a>
+        </div>
+
+
+        <div class="logo">📦</div>
+
+        <h2>สมัครสมาชิก</h2>
+
+        <form id="register-form">
+
+            <!-- Email -->
+            <div class="form-group">
+                <label>Email</label>
+                <input id="email" type="text" placeholder="กรอกอีเมล" />
+            </div>
+
+            <!-- Fullname -->
+            <div class="form-group">
+                <label>ชื่อ-นามสกุล</label>
+                <input id="fullname" type="text" placeholder="กรอกชื่อ-นามสกุล" />
+            </div>
+
+            <!-- Birthday + Gender -->
+            <div class="row">
+
+                <div class="form-group">
+                    <label>วันเกิด</label>
+                    <input id="birthday" type="date" />
+                </div>
+
+                <div class="form-group">
+                    <label>เพศ</label>
+                    <select id="gender">
+                        <option value="">-- เลือกเพศ --</option>
+                    </select>
+
+                </div>
+
+            </div>
+
+            <!-- Customer Type -->
+            <div class="form-group">
+                <label>ประเภทลูกค้า</label>
+                <select id="customerType">
+                    <option value="">-- เลือกประเภท --</option>
+                    <option value="student">นิสิต</option>
+                    <option value="general">บุคคลทั่วไป</option>
+                </select>
+            </div>
+
+            <div id="student-row" class="row" style="display:none;">
+
+                <div class="form-group">
+                    <label>คณะ</label>
+                    <select id="faculty">
+                        <option value="">-- เลือกคณะ --</option>
+                    </select>
+
+                </div>
+
+                <div class="form-group">
+                    <label>ชั้นปี</label>
+                    <select id="year">
+                        <option value="">-- เลือกชั้นปี --</option>
+                        <option value="1">ปี 1</option>
+                        <option value="2">ปี 2</option>
+                        <option value="3">ปี 3</option>
+                        <option value="4">ปี 4</option>
+                        <option value="5">ปี 5</option>
+                        <option value="6">ปี 6</option>
+                    </select>
+                </div>
+
+            </div>
+            <div class="form-group password-group">
+                <label>รหัสผ่าน</label>
+
+                <div class="password-wrapper">
+                    <input id="password" type="password" />
+                    <button type="button" class="toggle-password" data-target="password">
+                        <i class="fa-solid fa-eye"></i>
+                    </button>
+
+                </div>
+            </div>
+
+            <div class="form-group password-group">
+                <label>ยืนยันรหัสผ่าน</label>
+
+                <div class="password-wrapper">
+                    <input id="confirmPassword" type="password" />
+                    <button type="button" class="toggle-password" data-target="confirmPassword">
+                        <i class="fa-solid fa-eye"></i>
+                    </button>
+
+                </div>
+            </div>
+
+
+            <div class="form-group">
+                <label>เบอร์โทรศัพท์</label>
+                <input id="phone" type="text" placeholder="กรอกเบอร์โทรศัพท์" />
+            </div>
+
+            <button type="submit" class="btn-login">
+                สมัครสมาชิก
+            </button>
+
+        </form>
+
+        <div class="description">
+            การสมัครสมาชิกถือว่าคุณได้ยอมรับเงื่อนไขการใช้งานและนโยบายความเป็นส่วนตัวของเรา
+        </div>
+    </div>
+    <script src="register.js"></script>
+</body>
+
+</html>

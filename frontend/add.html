@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Add Equipment</title>
+</head>
+<body>
+
+<h2>Add New Equipment</h2>
+
+<form id="equipment-form">
+
+    ID: <input name="equipment_id" required><br><br>
+
+    Category ID: <input type="number" name="category_id" required><br><br>
+
+    Name: <input name="name" required><br><br>
+
+    Image URL: <input name="image_url"><br><br>
+
+    Price: <input type="number" step="0.01" name="price_per_unit" required><br><br>
+
+    Stock: <input type="number" name="total_stock" required><br><br>
+
+    Description:<br>
+    <textarea name="description"></textarea><br><br>
+
+    <button type="submit">Save</button>
+
+    <a href="index.html">Cancel</a>
+
+</form>
+
+<div id="result"></div>
+
+<script>
+const form = document.getElementById("equipment-form");
+
+form.addEventListener("submit", e => {
+    e.preventDefault();
+
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+
+    fetch("/sports_rental_system/api/add_equipment.php", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(result => {
+        if (result.success) {
+            alert("Saved!");
+            window.location.href = "index.html";
+        } else {
+            document.getElementById("result").innerText =
+                "Error saving data";
+        }
+    });
+});
+</script>
+
+</body>
+</html>
