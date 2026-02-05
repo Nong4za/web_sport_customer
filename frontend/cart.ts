@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
     renderBookingSummary();
 
     const confirmBtn =
-        document.getElementById("confirmBtn");
+        document.getElementById("confirmBtn") as HTMLButtonElement | null;
 
     confirmBtn?.addEventListener("click", () => {
 
@@ -16,6 +16,13 @@ document.addEventListener("DOMContentLoaded", () => {
             alert("ไม่มีรายการในตะกร้า");
             return;
         }
+
+        const total = calcCartTotal(cart);
+
+        localStorage.setItem(
+            "cartTotal",
+            total.toString()
+        );
 
         window.location.href = "confirm.html";
 
@@ -83,7 +90,7 @@ function renderCart() {
 function renderBookingSummary() {
 
     const date =
-        localStorage.getItem("rentDate");
+        localStorage.getItem("rentDate") || "-";
 
     const time =
         localStorage.getItem("timeSlot");
@@ -104,24 +111,33 @@ function renderBookingSummary() {
         document.getElementById("cartHours");
 
     if (dateEl)
-        dateEl.textContent = date || "-";
+        dateEl.textContent = date;
 
-    // ===== TIME RANGE =====
+    // ===== TIME =====
     if (timeEl) {
 
-        if (time && hours) {
+        if (time) {
 
-            const startHour =
-                parseInt(time);
+            if (hours) {
 
-            const endHour =
-                startHour + hours;
+                const startHour =
+                    parseInt(time);
 
-            const pad = (n: number) =>
-                n < 10 ? "0" + n : n.toString();
+                const endHour =
+                    startHour + hours;
 
-            timeEl.textContent =
-                `${pad(startHour)}:00 - ${pad(endHour)}:00`;
+                const pad = (n: number) =>
+                    n < 10 ? "0" + n : n.toString();
+
+                timeEl.textContent =
+                    `${pad(startHour)}:00 - ${pad(endHour)}:00`;
+
+            } else {
+
+                timeEl.textContent =
+                    `${time}:00`;
+
+            }
 
         } else {
 
@@ -131,7 +147,7 @@ function renderBookingSummary() {
 
     }
 
-    // ===== HOURS TEXT =====
+    // ===== HOURS =====
     if (hourEl) {
 
         if (hours)
@@ -165,7 +181,7 @@ fetch("/sports_rental_system/api/get_profile.php")
 
 
 /* ===============================
-    BUILD ITEM ROW (NO +/-)
+    BUILD ITEM ROW
 ================================ */
 
 function buildCartRow(item: any): HTMLElement {
@@ -283,5 +299,32 @@ function updateCartCount(count: number) {
     if (badge)
         badge.textContent =
             count.toString();
+
+}
+
+
+/* ===============================
+   TOTAL PRICE
+================================ */
+
+function calcCartTotal(cart: any[]): number {
+
+    let total = 0;
+
+    for (let i = 0; i < cart.length; i++) {
+
+        const item = cart[i];
+
+        const price =
+            Number(item.price) || 0;
+
+        const qty =
+            Number(item.qty) || 0;
+
+        total += price * qty;
+
+    }
+
+    return total;
 
 }

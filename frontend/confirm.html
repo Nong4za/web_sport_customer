@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>ยืนยันการเช่า | ระบบจองอุปกรณ์กีฬา</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/confirm.css">
+</head>
+
+<body>
+
+    <!-- ================= HEADER ================= -->
+
+    <header class="main-header">
+
+        <div class="header-top">
+
+            <div class="brand">
+                <span class="brand-name">ระบบจองอุปกรณ์กีฬา</span>
+                <small>Sports Equipment Booking System</small>
+            </div>
+
+            <div class="user-zone">
+                <div class="badge orange" id="topPoints">⭐ - คะแนน</div>
+                <a class="badge purple" href="coupon.html">🎟 คูปอง</a>
+                <a href="profile.html" class="profile-btn">👤 โปรไฟล์</a>
+            </div>
+
+        </div>
+
+        <div class="header-bottom">
+            <nav class="main-nav">
+                <a href="index.html" class="nav-item active">เลือกอุปกรณ์</a>
+                <a href="my-bookings.html" class="nav-item">รายการจอง</a>
+                <a href="history.html" class="nav-item">ประวัติการเช่า</a>
+                <a href="history_point.html" class="nav-item">ประวัติการใช้แต้ม</a>
+                <a href="status_maintenance.html" class="nav-item">สถานะการซ่อม</a>
+            </nav>
+        </div>
+
+    </header>
+
+    <!-- ================= MAIN ================= -->
+
+    <main class="container">
+
+        <!-- PANEL -->
+        <div class="confirm-panel">
+
+            <!-- SUMMARY -->
+            <section class="summary-bar">
+                <div class="summary-left">
+                    วันที่: <strong id="confirmDate">-</strong>
+
+                    <span class="sep">|</span>
+
+                    เวลา: <strong id="confirmTime">-</strong>
+
+                    <span class="sep">|</span>
+
+                    จำนวนชั่วโมง:
+                    <strong id="confirmHours">-</strong> ชั่วโมง
+                </div>
+
+            </section>
+
+            <!-- ITEMS -->
+            <section class="section">
+                <h3>รายการที่เลือก</h3>
+                <div id="confirmItems"></div>
+            </section>
+
+            <!-- PRICE -->
+            <section class="section price-box">
+
+                <h3>สรุปราคา</h3>
+
+                <div class="row">
+                    <span>ราคารวม</span>
+                    <strong id="baseTotal">0 บาท</strong>
+                </div>
+                <div class="row">
+                    <span>ค่าเช่าเพิ่มตามชั่วโมง</span>
+                    <strong id="extraHourFee">0 บาท</strong>
+                </div>
+
+
+                <div class="row discount-row">
+
+                    <div>
+                        <span>ใช้แต้ม</span>
+                        <strong>-<span id="pointDiscount">0</span> บาท</strong>
+                    </div>
+
+                    <div>
+                        <span>คูปอง</span>
+                        <strong>-<span id="couponDiscount">0</span> บาท</strong>
+                    </div>
+
+                </div>
+
+
+                <hr>
+
+                <div class="row total">
+                    <span>ยอดสุทธิ</span>
+                    <strong id="netTotal">0 บาท</strong>
+                </div>
+
+                <div class="earn">
+                    ได้รับ <span id="earnPoints">0</span> แต้ม
+                </div>
+
+            </section>
+
+            <!-- USE POINT -->
+            <section class="section">
+
+                <h3>ใช้แต้มสะสม</h3>
+
+                <p>คุณมี <strong id="userPoints">0</strong> แต้ม</p>
+
+                <div class="point-box">
+                    <button id="minusPoint">−</button>
+                    <input id="usePointInput" type="number" value="0" min="0">
+                    <button id="plusPoint">+</button>
+
+                    <button id="useMaxPoint" class="mini-btn">
+                        ใช้ทั้งหมด
+                    </button>
+                </div>
+
+            </section>
+
+            <!-- COUPON -->
+            <section class="section">
+
+                <h3>ใช้โค้ดส่วนลด</h3>
+
+                <div class="coupon-box">
+                    <input id="couponInput" type="text" placeholder="ใส่รหัสคูปอง">
+                    <button id="applyCoupon">ใช้คูปอง</button>
+                </div>
+
+                <p id="couponMsg" class="msg"></p>
+
+            </section>
+
+            <!-- ACTION -->
+            <section class="actions">
+
+                <a href="cart.html" class="secondary-btn">
+                    กลับตะกร้า
+                </a>
+
+                <button id="payBtn" class="primary-btn">
+                    ชำระเงิน
+                </button>
+
+            </section>
+
+        </div>
+    </main>
+
+    <script src="confirm.js"></script>
+
+</body>
+
+</html>

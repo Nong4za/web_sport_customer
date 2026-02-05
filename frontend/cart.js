@@ -9,6 +9,8 @@ document.addEventListener("DOMContentLoaded", function () {
             alert("ไม่มีรายการในตะกร้า");
             return;
         }
+        var total = calcCartTotal(cart);
+        localStorage.setItem("cartTotal", total.toString());
         window.location.href = "confirm.html";
     });
 });
@@ -46,7 +48,7 @@ function renderCart() {
     SUMMARY BAR
 ================================ */
 function renderBookingSummary() {
-    var date = localStorage.getItem("rentDate");
+    var date = localStorage.getItem("rentDate") || "-";
     var time = localStorage.getItem("timeSlot");
     var hoursStr = localStorage.getItem("rentHours");
     var hours = Number(hoursStr || 0);
@@ -54,23 +56,29 @@ function renderBookingSummary() {
     var timeEl = document.getElementById("cartTime");
     var hourEl = document.getElementById("cartHours");
     if (dateEl)
-        dateEl.textContent = date || "-";
-    // ===== TIME RANGE =====
+        dateEl.textContent = date;
+    // ===== TIME =====
     if (timeEl) {
-        if (time && hours) {
-            var startHour = parseInt(time);
-            var endHour = startHour + hours;
-            var pad = function (n) {
-                return n < 10 ? "0" + n : n.toString();
-            };
-            timeEl.textContent =
-                "".concat(pad(startHour), ":00 - ").concat(pad(endHour), ":00");
+        if (time) {
+            if (hours) {
+                var startHour = parseInt(time);
+                var endHour = startHour + hours;
+                var pad = function (n) {
+                    return n < 10 ? "0" + n : n.toString();
+                };
+                timeEl.textContent =
+                    "".concat(pad(startHour), ":00 - ").concat(pad(endHour), ":00");
+            }
+            else {
+                timeEl.textContent =
+                    "".concat(time, ":00");
+            }
         }
         else {
             timeEl.textContent = "-";
         }
     }
-    // ===== HOURS TEXT =====
+    // ===== HOURS =====
     if (hourEl) {
         if (hours)
             hourEl.textContent =
@@ -92,7 +100,7 @@ fetch("/sports_rental_system/api/get_profile.php")
     }
 });
 /* ===============================
-    BUILD ITEM ROW (NO +/-)
+    BUILD ITEM ROW
 ================================ */
 function buildCartRow(item) {
     var row = document.createElement("div");
@@ -143,4 +151,17 @@ function updateCartCount(count) {
     if (badge)
         badge.textContent =
             count.toString();
+}
+/* ===============================
+   TOTAL PRICE
+================================ */
+function calcCartTotal(cart) {
+    var total = 0;
+    for (var i = 0; i < cart.length; i++) {
+        var item = cart[i];
+        var price = Number(item.price) || 0;
+        var qty = Number(item.qty) || 0;
+        total += price * qty;
+    }
+    return total;
 }
