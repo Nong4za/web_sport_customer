@@ -3,23 +3,16 @@
 
 <head>
     <meta charset="UTF-8" />
-    <title>เลือกอุปกรณ์ | ระบบเช่าอุปกรณ์กีฬา</title>
+    <title>รายการจอง</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai&display=swap" rel="stylesheet">
-
-    <!-- Flatpickr -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-
     <link rel="stylesheet" href="css/my-bookings.css" />
 </head>
 
-<body id="equipmentPage">
+<body>
 
-    <!-- ================= HEADER ================= -->
     <header class="main-header">
-
         <div class="header-top">
-
             <div class="brand">
                 <span class="brand-name">ระบบจองอุปกรณ์กีฬา</span>
                 <small>Sports Equipment Booking System</small>
@@ -42,14 +35,140 @@
                 <a href="status_maintenance.html" class="nav-item">สถานะการซ่อม</a>
             </nav>
         </div>
+    </header>
 
-        <h2 class="page-title">รายการจองของฉัน</h2>
+    <h2 class="page-title">รายการจองของฉัน</h2>
 
+    <div class="page-container">
+
+        <!-- STATUS TABS -->
+        <div class="booking-status-tabs">
+            <button class="status-tab active" data-status="WAITING_STAFF">
+                รออนุมัติ (<span id="count-WAITING_STAFF">0</span>)
+            </button>
+
+            <button class="status-tab" data-status="CONFIRMED_WAITING_PICKUP">
+                รอรับอุปกรณ์ (<span id="count-CONFIRMED_WAITING_PICKUP">0</span>)
+            </button>
+
+            <button class="status-tab" data-status="IN_USE">
+                กำลังใช้งาน (<span id="count-IN_USE">0</span>)
+            </button>
+        </div>
+
+        <!-- BOOKING LIST -->
         <div class="booking-list" id="bookingList">
             <p class="loading">กำลังโหลด...</p>
         </div>
 
-        <script src="my-bookings.js"></script>
+    </div>
+
+    <!-- ================= MODAL: CONFIRM ================= -->
+
+    <div id="confirmCancelModal" class="modal hidden">
+        <div class="modal-box">
+            <h3>ยืนยันการยกเลิก</h3>
+            <p class="modal-desc">
+                หากยกเลิกแล้ว ระบบจะให้เจ้าหน้าที่ดำเนินการคืนเงินภายหลัง
+            </p>
+
+            <div class="modal-actions">
+                <button id="closeConfirmCancel" class="btn-light">ปิด</button>
+                <button id="continueCancel" class="btn-danger">
+                    ดำเนินการต่อ
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= MODAL: REFUND FORM ================= -->
+
+    <div id="refundModal" class="modal hidden">
+        <div class="modal-box">
+
+            <h3>บันทึกข้อมูลบัญชีคืนเงิน</h3>
+
+            <label>ธนาคาร</label>
+            <select id="refundBank">
+                <option value="">-- เลือกธนาคาร --</option>
+                <option value="SCB">ไทยพาณิชย์</option>
+                <option value="KBank">กสิกรไทย</option>
+                <option value="BBL">กรุงเทพ</option>
+                <option value="KTB">กรุงไทย</option>
+                <option value="BAY">กรุงศรี</option>
+                <option value="TTB">ทีทีบี</option>
+                <option value="GSB">ออมสิน</option>
+            </select>
+
+            <label>เลขบัญชี</label>
+            <input id="refundAccount" type="text">
+
+            <label>ชื่อบัญชี</label>
+            <input id="refundName" type="text">
+
+            <div class="modal-actions">
+                <button id="closeRefund" class="btn-light">ปิด</button>
+                <button id="saveRefund" class="btn-danger">
+                    บันทึกข้อมูล
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= MODAL: FINAL CANCEL ================= -->
+
+    <div id="finalCancelModal" class="modal hidden">
+
+        <div class="modal-box">
+
+            <h3>ยกเลิกการจอง</h3>
+
+            <div id="refundPreview" class="refund-preview">
+
+                <div class="refund-card">
+
+                    <div class="refund-header">
+                        <strong>ข้อมูลบัญชีรับเงินคืน</strong>
+
+                        <button id="editRefundBtn" class="btn-edit-refund">
+                            แก้ไข
+                        </button>
+                    </div>
+
+                    <div class="refund-row">
+                        <span>ธนาคาร</span>
+                        <b id="previewBank">-</b>
+                    </div>
+
+                    <div class="refund-row">
+                        <span>เลขบัญชี</span>
+                        <b id="previewAccount">-</b>
+                    </div>
+
+                    <div class="refund-row">
+                        <span>ชื่อบัญชี</span>
+                        <b id="previewName">-</b>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <label>เหตุผลในการยกเลิก</label>
+            <textarea id="cancelReason"></textarea>
+
+            <div class="modal-actions">
+                <button id="closeFinalCancel" class="btn-light">ปิด</button>
+                <button id="submitCancel" class="btn-danger">
+                    ยืนยันยกเลิก
+                </button>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script src="my-bookings.js"></script>
 </body>
 
 </html>

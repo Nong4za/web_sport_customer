@@ -28,9 +28,9 @@ if (!$data) {
 ================================ */
 
 $cart       = $data["cart"] ?? [];
-$rentDate  = $data["rentDate"] ?? null;
-$timeSlot  = isset($data["timeSlot"]) ? (int)$data["timeSlot"] : null;
-$rentHours = (int)($data["rentHours"] ?? 1);
+$rentDate   = $data["rentDate"] ?? null;
+$timeSlot   = isset($data["timeSlot"]) ? (int)$data["timeSlot"] : null;
+$rentHours  = (int)($data["rentHours"] ?? 1);
 
 $usedPoints     = (int)($data["usedPoints"] ?? 0);
 $couponDiscount = (int)($data["couponDiscount"] ?? 0);
@@ -47,7 +47,7 @@ $missing = [];
 
 if (!$customerId) $missing[] = "customerId";
 if (!$branchId)   $missing[] = "branchId";
-if (!$rentDate)  $missing[] = "rentDate";
+if (!$rentDate)   $missing[] = "rentDate";
 if ($timeSlot === null) $missing[] = "timeSlot";
 if (empty($cart)) $missing[] = "cart";
 
@@ -69,7 +69,7 @@ $conn->begin_transaction();
 try {
 
     /* ===============================
-       HELPER
+       HELPERS
     ================================ */
 
     function getIdByCode($conn, $table, $code) {
@@ -215,7 +215,7 @@ try {
     }
 
     /* ===============================
-       INSERT DETAILS
+       INSERT DETAILS (FIX FK)
     ================================ */
 
     $dStmt = $conn->prepare("
@@ -232,19 +232,7 @@ try {
 
     foreach ($cart as $item) {
 
-        /* ===== NORMALIZE TYPE ===== */
-
-        $type = $item["type"] ?? null;
-
-        if ($type) {
-            $type = strtolower($type);
-        }
-
-        if (!$type) {
-            $type = str_starts_with($item["id"], "V")
-                ? "venue"
-                : "equipment";
-        }
+        $type = strtolower($item["type"] ?? "");
 
         $equipmentId = null;
         $venueId = null;
@@ -252,23 +240,27 @@ try {
         if ($type === "venue" || $type === "field") {
 
             $type = "Venue";
-            $venueId = (string)$item["id"];
+            $venueId = trim($item["id"]);
 
         } else {
 
             $type = "Equipment";
-            $equipmentId = (string)$item["id"];
+            $equipmentId = trim($item["id"]);
         }
 
         $qty   = (int)$item["qty"];
         $price = (float)$item["price"];
 
+        // 👉 สำคัญ: NULL ต้องเป็น NULL จริง
+        $eq = $equipmentId ?: null;
+        $vn = $venueId ?: null;
+
         $dStmt->bind_param(
-            "ssssid",
+            "sssssd",
             $bookingCode,
             $type,
-            $equipmentId,
-            $venueId,
+            $eq,
+            $vn,
             $qty,
             $price
         );

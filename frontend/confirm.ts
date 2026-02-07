@@ -361,7 +361,6 @@ function updateTotals(): void {
     setText("couponDiscount", couponDiscount.toString());
     setText("netTotal", net + " บาท");
 
-    // ✅ ใช้ net ให้ตรง backend
     setText("earnPoints", Math.floor(net / 100).toString());
 }
 
@@ -408,7 +407,7 @@ function bindSubmit(): void {
             const payload = {
                 branchId,
                 rentDate: rawDate,
-                timeSlot: Number(timeSlotRaw), // ✅ cast เป็น number
+                timeSlot: Number(timeSlotRaw),
                 rentHours: Number(localStorage.getItem("rentHours") || 1),
                 usedPoints,
                 couponDiscount,

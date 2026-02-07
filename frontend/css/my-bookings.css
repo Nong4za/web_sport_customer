@@ -1,3 +1,5 @@
+/* ================= BASE ================= */
+
 * {
     box-sizing: border-box;
     font-family: "Noto Sans Thai", sans-serif;
@@ -105,55 +107,113 @@ body {
 
 .nav-item.active {
     color: #ff7a00;
-    border-bottom: 2px solid #ff7a00;
+    border-bottom-color: #ff7a00;
     font-weight: 600;
 }
 
+/* ================= PAGE ================= */
+
 .page-title {
     text-align: center;
-    margin: 40px 0 20px;
+    margin: 34px 0 20px;
 }
 
-.booking-list {
+/* ================= CONTAINER ================= */
+
+.page-container {
     max-width: 900px;
-    margin: auto;
+    margin: 0 auto;
     padding: 0 20px 60px;
+}
+
+/* ================= STATUS TABS ================= */
+
+.booking-status-tabs {
+    margin-bottom: 22px;
+
+    display: flex;
+    gap: 26px;
+
+    padding: 0 6px;
+
+    background: none;
+
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.status-tab {
+    appearance: none;
+    background: none;
+
+    border: none;
+
+    padding: 10px 2px 12px;
+
+    font-size: 15px;
+    font-weight: 500;
+
+    color: #6b7280;
+
+    cursor: pointer;
+
+    border-bottom: 2px solid transparent;
+
+    transition: all .15s ease;
+}
+
+.status-tab:hover {
+    color: #111827;
+}
+
+.status-tab.active {
+    color: #ff7a00;
+    font-weight: 600;
+
+    border-bottom-color: #ff7a00;
+}
+
+/* ================= LIST ================= */
+
+.booking-list {
+    padding: 0;
 }
 
 .booking-card {
     background: white;
-    border-radius: 18px;
-    padding: 22px 26px;
+    border-radius: 14px;
 
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    padding: 20px 22px 56px;
 
-    margin-bottom: 16px;
+    position: relative;
 
-    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.05);
+    margin-bottom: 18px;
+
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
 }
 
-/* LEFT */
+/* INFO */
 
 .booking-info h4 {
     margin: 0 0 6px;
 }
 
 .booking-info p {
-    margin: 3px 0;
+    margin: 4px 0;
     font-size: 14px;
     color: #555;
 }
 
-/* STATUS */
+/* STATUS BADGE */
 
 .status {
     padding: 6px 14px;
     border-radius: 999px;
+
     font-size: 12px;
     font-weight: 600;
+
     margin-bottom: 10px;
+
     display: inline-block;
 }
 
@@ -172,27 +232,235 @@ body {
     color: #047857;
 }
 
-/* BUTTON */
+/* ================= ACTIONS ================= */
 
-.btn {
-    display: inline-block;
-    padding: 8px 18px;
+.booking-actions {
+    position: absolute;
+    right: 20px;
+    bottom: 16px;
+
+    display: flex;
+    gap: 10px;
+}
+
+/* DETAIL */
+
+.btn-outline {
+    padding: 7px 16px;
+
     border-radius: 999px;
-    background: #ff7a00;
-    color: white;
-    text-decoration: none;
+
+    border: 1px solid #ff7a00;
+
+    background: white;
+
+    color: #ff7a00;
+
     font-size: 13px;
-    margin-top: 8px;
+
+    cursor: pointer;
 }
 
-.btn:hover {
-    opacity: 0.9;
+.btn-outline:hover {
+    background: #fff3e6;
 }
 
-/* EMPTY */
+/* CANCEL */
 
-.empty {
+.btn-cancel {
+    padding: 7px 16px;
+
+    border-radius: 999px;
+
+    background: #fee2e2;
+
+    color: #b91c1c;
+
+    border: none;
+
+    font-size: 13px;
+
+    cursor: pointer;
+}
+
+.btn-cancel:hover {
+    background: #fecaca;
+}
+
+/* ================= MODAL ================= */
+
+.modal {
+    position: fixed;
+    inset: 0;
+
+    background: rgba(0, 0, 0, 0.45);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    z-index: 999;
+}
+
+.modal.hidden {
+    display: none;
+}
+
+.modal-box {
+    background: white;
+
+    padding: 26px;
+
+    border-radius: 16px;
+
+    width: 100%;
+    max-width: 420px;
+}
+
+.modal-title {
+    margin: 0 0 10px;
+}
+
+.modal-desc {
+    font-size: 13px;
+    color: #b45309;
+
+    background: #fff7ed;
+
+    padding: 10px;
+
+    border-radius: 8px;
+
+    margin-bottom: 12px;
+}
+
+.modal-box label {
+    display: block;
+    margin-top: 12px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.modal-box select,
+.modal-box input,
+.modal-box textarea {
+    width: 100%;
+
+    margin-top: 6px;
+
+    padding: 10px;
+
+    border-radius: 8px;
+
+    border: 1px solid #ddd;
+}
+
+/* ================= MODAL ACTION ================= */
+
+.modal-actions {
+    margin-top: 20px;
+
+    display: flex;
+    justify-content: flex-end;
+
+    gap: 10px;
+}
+
+.btn-light {
+    background: #f3f4f6;
+
+    border: none;
+
+    padding: 8px 18px;
+
+    border-radius: 999px;
+
+    cursor: pointer;
+}
+
+.btn-danger {
+    background: #dc2626;
+
+    color: white;
+
+    border: none;
+
+    padding: 8px 18px;
+
+    border-radius: 999px;
+
+    cursor: pointer;
+}
+
+/* ================= EMPTY / LOADING ================= */
+
+.empty,
+.loading {
     text-align: center;
     color: #777;
     margin-top: 60px;
+}
+
+/* ================= REFUND PREVIEW ================= */
+
+.refund-preview {
+    margin-bottom: 16px;
+}
+
+.refund-card {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 14px;
+}
+
+.refund-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.refund-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 0;
+    font-size: 14px;
+}
+
+.refund-row span {
+    color: #6b7280;
+}
+
+/* edit button */
+
+.btn-edit-refund {
+    border: none;
+    background: transparent;
+    color: #2563eb;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.btn-edit-refund:hover {
+    text-decoration: underline;
+}
+
+
+/* ================= RESPONSIVE ================= */
+
+@media (max-width: 640px) {
+
+    .booking-status-tabs {
+        gap: 16px;
+    }
+
+    .booking-actions {
+        position: static;
+        margin-top: 16px;
+    }
+
+    .booking-card {
+        padding-bottom: 22px;
+    }
 }
