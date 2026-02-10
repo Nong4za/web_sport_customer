@@ -9,7 +9,7 @@ const code = params.get("code");
 const loading = document.getElementById("loading")!;
 const box = document.getElementById("detailBox")!;
 
-fetch(`/sports_rental_system/customer/api/custget_booking_detail.php?code=${code}`, {
+fetch(`/sports_rental_system/customer/api/get_booking_detail.php?code=${code}`, {
     credentials: "include"
 })
     .then(r => r.json())

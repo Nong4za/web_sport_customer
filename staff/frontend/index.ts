@@ -382,10 +382,9 @@ document.addEventListener("DOMContentLoaded", () => {
 		.then(res => res.json())
 		.then(data => {
 			if (data.success) {
-				// 1. เก็บ Branch ID ลง State ของหน้า Index
+				
 				selectedBranchId = data.branch_id;
 
-				// 2. แสดงชื่อสาขาบนหน้าจอ (จุดที่เดิมขึ้นว่า "กำลังโหลด...")
 				if (branchLabel) {
 					branchLabel.textContent = data.branch_name;
 				}

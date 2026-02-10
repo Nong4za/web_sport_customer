@@ -1,6 +1,6 @@
 <?php
 session_start();
-require "../database.php";
+require "../../database.php";
 
 $cid = $_SESSION["customer_id"] ?? null;
 

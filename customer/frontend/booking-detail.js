@@ -2,7 +2,7 @@ var params = new URLSearchParams(window.location.search);
 var code = params.get("code");
 var loading = document.getElementById("loading");
 var box = document.getElementById("detailBox");
-fetch("/sports_rental_system/customer/api/custget_booking_detail.php?code=".concat(code), {
+fetch("/sports_rental_system/customer/api/get_booking_detail.php?code=".concat(code), {
     credentials: "include"
 })
     .then(function (r) { return r.json(); })

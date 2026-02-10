@@ -1,167 +1,458 @@
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", () => {
     console.log("cart.ts loaded");
+
     renderCart();
     renderBookingSummary();
-    var confirmBtn = document.getElementById("confirmBtn");
-    confirmBtn === null || confirmBtn === void 0 ? void 0 : confirmBtn.addEventListener("click", function () {
-        var cart = getCart();
-        if (cart.length === 0) {
-            alert("ไม่มีรายการในตะกร้า");
-            return;
-        }
-        var total = calcCartTotal(cart);
-        localStorage.setItem("cartTotal", total.toString());
-        window.location.href = "confirm.html";
-    });
+    setupMemberModal();
 });
+
 /* ===============================
    MAIN RENDER
 ================================ */
+
 function renderCart() {
-    var cart = getCart();
-    var emptyBox = document.getElementById("emptyCart");
-    var itemsBox = document.getElementById("cartItems");
-    var actionsBox = document.getElementById("cartActions");
-    if (!emptyBox || !itemsBox || !actionsBox)
-        return;
-    if (cart.length === 0) {
+
+    
+
+    const cart = getCart();
+
+    const emptyBox = document.getElementById("emptyCart");
+    const itemsBox = document.getElementById("cartItems");
+    const actionsBox = document.getElementById("cartActions");
+
+    if (!emptyBox || !itemsBox || !actionsBox) return;
+
+    if (!cart.length) {
         emptyBox.classList.remove("hidden");
         itemsBox.classList.add("hidden");
         actionsBox.classList.add("hidden");
         updateCartCount(0);
         return;
     }
+
     emptyBox.classList.add("hidden");
     itemsBox.classList.remove("hidden");
     actionsBox.classList.remove("hidden");
+
     itemsBox.innerHTML = "<h3>รายการที่เลือก</h3>";
-    var totalQty = 0;
-    for (var i = 0; i < cart.length; i++) {
-        var item = cart[i];
-        totalQty += Number(item.qty) || 0;
-        var row = buildCartRow(item);
+
+    for (let i = 0; i < cart.length; i++) {
+        const row = buildCartRow(cart[i], i);
         itemsBox.appendChild(row);
     }
-    updateCartCount(totalQty);
+
+    updateCartCount(cart.length);
 }
+
 /* ===============================
-    SUMMARY BAR
+   SUMMARY BAR
 ================================ */
+
 function renderBookingSummary() {
-    var date = localStorage.getItem("rentDate") || "-";
-    var time = localStorage.getItem("timeSlot");
-    var hoursStr = localStorage.getItem("rentHours");
-    var hours = Number(hoursStr || 0);
-    var dateEl = document.getElementById("cartDate");
-    var timeEl = document.getElementById("cartTime");
-    var hourEl = document.getElementById("cartHours");
-    if (dateEl)
-        dateEl.textContent = date;
-    // ===== TIME =====
+
+    const date = localStorage.getItem("rentDate") || "-";
+    const time = localStorage.getItem("timeSlot");
+    const hoursStr = localStorage.getItem("rentHours");
+    const hours = Number(hoursStr || 0);
+
+    const dateEl = document.getElementById("cartDate");
+    const timeEl = document.getElementById("cartTime");
+    const hourEl = document.getElementById("cartHours");
+
+    if (dateEl) dateEl.textContent = date;
+
     if (timeEl) {
-        if (time) {
-            if (hours) {
-                var startHour = parseInt(time);
-                var endHour = startHour + hours;
-                var pad = function (n) {
-                    return n < 10 ? "0" + n : n.toString();
-                };
-                timeEl.textContent =
-                    "".concat(pad(startHour), ":00 - ").concat(pad(endHour), ":00");
-            }
-            else {
-                timeEl.textContent =
-                    "".concat(time, ":00");
-            }
-        }
-        else {
+
+        if (time && hours) {
+
+            const start = parseInt(time);
+            const end = start + hours;
+
+            timeEl.textContent =
+                pad(start) + ":00 - " + pad(end) + ":00";
+
+        } else if (time) {
+
+            timeEl.textContent = time + ":00";
+
+        } else {
             timeEl.textContent = "-";
         }
     }
-    // ===== HOURS =====
+
     if (hourEl) {
-        if (hours)
-            hourEl.textContent =
-                "".concat(hours, " \u0E0A\u0E31\u0E48\u0E27\u0E42\u0E21\u0E07");
-        else
-            hourEl.textContent = "-";
+        hourEl.textContent =
+            hours ? hours + " ชั่วโมง" : "-";
+    }
+}
+
+function pad(n: number) {
+    return n < 10 ? "0" + n : n.toString();
+}
+
+/* ===============================
+   BUILD ROW
+================================ */
+
+function buildCartRow(item: any, index: number) {
+    console.log("ITEM:", item);
+
+    const row = document.createElement("div");
+    row.className = "cart-item";
+
+    const img = item.image || "images/no-image.png";
+
+    row.innerHTML = `
+        <img src="${img}">
+
+        <div class="cart-item-info">
+            <h4>${item.name}</h4>
+            <small>เลือกหมายเลขอุปกรณ์</small>
+        </div>
+
+        <div class="cart-item-qty">
+            <select class="instance-select">
+                <option value="">-- เลือก --</option>
+            </select>
+        </div>
+
+        <button class="cart-item-remove">
+            <i class="fa-solid fa-trash"></i>
+        </button>
+    `;
+
+    const select =
+        row.querySelector(".instance-select") as HTMLSelectElement;
+
+    const removeBtn =
+        row.querySelector(".cart-item-remove") as HTMLButtonElement;
+
+    loadInstancesForRow(item.id, select, item.instance_code);
+    
+    select.addEventListener("change", () => {
+        updateInstanceCode(index, select.value);
+        renderCart(); // refresh เพื่อกันซ้ำ
+    });
+
+    removeBtn.addEventListener("click", () => {
+        removeItemByIndex(index);
+        renderCart();
+    });
+
+    return row;
+}
+
+/* ===============================
+   LOAD INSTANCES
+================================ */
+
+function loadInstancesForRow(
+    equipmentId: string,
+    selectEl: HTMLSelectElement,
+    selected?: string
+) {
+
+    fetch(
+        "/sports_rental_system/staff/api/get_equipment_instances.php?equipment_id=" +
+        equipmentId
+    )
+        .then(res => res.json())
+        .then(data => {
+
+            if (!data.success) return;
+
+            selectEl.innerHTML =
+                `<option value="">-- เลือก --</option>`;
+
+            const cart = getCart();
+
+            const usedCodes: string[] = [];
+
+            for (let i = 0; i < cart.length; i++) {
+                if (cart[i].instance_code) {
+                    usedCodes.push(cart[i].instance_code);
+                }
+            }
+
+            for (let i = 0; i < data.instances.length; i++) {
+
+                const inst = data.instances[i];
+
+                let used = false;
+
+                for (let j = 0; j < usedCodes.length; j++) {
+                    if (
+                        usedCodes[j] === inst.instance_code &&
+                        inst.instance_code !== selected
+                    ) {
+                        used = true;
+                        break;
+                    }
+                }
+
+                if (used) continue;
+
+                const opt = document.createElement("option");
+
+                opt.value = inst.instance_code;
+                opt.textContent =
+                    inst.instance_code;
+
+                if (selected === inst.instance_code) {
+                    opt.selected = true;
+                }
+
+                selectEl.appendChild(opt);
+            }
+        });
+}
+
+/* ===============================
+   MEMBER MODAL
+================================ */
+
+function setupMemberModal() {
+
+    const confirmBtn =
+        document.getElementById("confirmBtn") as HTMLButtonElement;
+
+    const modal =
+        document.getElementById("memberModal") as HTMLElement;
+
+    const closeBtn =
+        document.getElementById("closeMemberModal") as HTMLButtonElement;
+
+    const searchBtn =
+        document.getElementById("searchMemberBtn") as HTMLButtonElement;
+
+    const confirmMemberBtn =
+        document.getElementById("confirmMemberBtn") as HTMLButtonElement;
+
+    const input =
+        document.getElementById("memberInput") as HTMLInputElement;
+
+    let foundCustomer: any = null;
+
+    confirmBtn.addEventListener("click", () => {
+
+        const cart = getCart();
+
+        if (!cart.length) {
+            alert("ไม่มีรายการในตะกร้า");
+            return;
+        }
+
+        let missing = false;
+
+        for (let i = 0; i < cart.length; i++) {
+            if (!cart[i].instance_code) {
+                missing = true;
+                break;
+            }
+        }
+
+        if (missing) {
+            alert("กรุณาเลือกหมายเลขอุปกรณ์ให้ครบทุกชิ้น");
+            return;
+        }
+
+        modal.classList.remove("hidden");
+        input.value = "";
+        foundCustomer = null;
+        confirmMemberBtn.disabled = true;
+    });
+
+    closeBtn.addEventListener("click", () => {
+        modal.classList.add("hidden");
+    });
+
+    searchBtn.addEventListener("click", () => {
+
+        const q = input.value.trim();
+
+        if (!q) {
+            alert("กรอกชื่อหรือรหัสสมาชิก");
+            return;
+        }
+
+        fetch("/sports_rental_system/staff/api/search_customer.php", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ q: q })
+        })
+            .then(res => res.json())
+            .then(data => {
+
+                if (!data.success) {
+                    alert("ไม่พบสมาชิก");
+                    return;
+                }
+
+                foundCustomer = data.customer;
+
+                confirmMemberBtn.disabled = false;
+
+                fillMemberResult(foundCustomer);
+            });
+    });
+
+    confirmMemberBtn.addEventListener("click", () => {
+
+        if (!foundCustomer) return;
+
+        localStorage.setItem(
+            "customer_id",
+            foundCustomer.customer_id
+        );
+
+        localStorage.setItem(
+            "customer_name",
+            foundCustomer.name
+        );
+
+        modal.classList.add("hidden");
+
+        const total = calcCartTotal(getCart());
+
+        localStorage.setItem(
+            "cartTotal",
+            total.toString()
+        );
+
+        window.location.href = "confirm.html";
+    });
+}
+
+/* ===============================
+   MEMBER RESULT
+================================ */
+
+function fillMemberResult(data: any) {
+
+    const resultBox =
+        document.getElementById("memberResult")!;
+    resultBox.classList.remove("hidden");
+
+    // name
+    document.getElementById("mName")!.textContent =
+        data.name;
+
+    // type mapping
+    let typeText = "";
+
+    if (data.customer_type === "student") {
+        typeText = "นิสิตนักศึกษา";
+    } else {
+        typeText = "บุคคลทั่วไป";
+    }
+
+    document.getElementById("mType")!.textContent =
+        typeText;
+
+    // hide member level ❌
+    const levelRow =
+        document.getElementById("memberLevelRow");
+    if (levelRow) levelRow.remove();
+
+    // points
+    document.getElementById("mPoints")!.textContent =
+        data.current_points;
+
+    // phone
+    document.getElementById("mPhone")!.textContent =
+        data.phone;
+
+    // faculty + year (only student)
+    const facultyRow =
+        document.getElementById("facultyRow")!;
+
+    const yearRow =
+        document.getElementById("yearRow")!;
+
+    if (data.customer_type === "student") {
+
+        facultyRow.classList.remove("hidden");
+        yearRow.classList.remove("hidden");
+
+        document.getElementById("mFaculty")!.textContent =
+            data.faculty_name || "-";
+
+        document.getElementById("mYear")!.textContent =
+            data.study_year || "-";
+
+    } else {
+        facultyRow.classList.add("hidden");
+        yearRow.classList.add("hidden");
     }
 }
 
 /* ===============================
-    FETCH USER POINTS
+   HELPERS
 ================================ */
-fetch("/sports_rental_system/staff/api/get_profile.php")
-    .then(res => res.json())
-    .then(data => {
 
-        const pointEl =
-            document.getElementById("topPoints");
-    });
+function getCart(): any[] {
 
-/* ===============================
-    BUILD ITEM ROW
-================================ */
-function buildCartRow(item) {
-    var row = document.createElement("div");
-    row.className = "cart-item";
-    var img = item.image || "images/no-image.png";
-    row.innerHTML = "\n\n        <img src=\"".concat(img, "\">\n\n        <div class=\"cart-item-info\">\n            <h4>").concat(item.name, "</h4>\n            <small>\n                ").concat(item.type === "field"
-        ? "สนาม"
-        : "อุปกรณ์", "\n            </small>\n        </div>\n\n        <div class=\"cart-item-qty readonly\">\n            x<strong>").concat(item.qty, "</strong>\n        </div>\n\n        <button class=\"cart-item-remove\">\n            <i class=\"fa-solid fa-trash\"></i>\n        </button>\n\n    ");
-    var removeBtn = row.querySelector(".cart-item-remove");
-    removeBtn.addEventListener("click", function () {
-        removeItem(item.id);
-        renderCart();
-    });
-    return row;
-}
-/* ===============================
-   CART HELPERS
-================================ */
-function getCart() {
     try {
-        var raw = localStorage.getItem("cart");
-        if (!raw)
-            return [];
-        var parsed = JSON.parse(raw);
+
+        const raw = localStorage.getItem("cart");
+        if (!raw) return [];
+
+        const parsed = JSON.parse(raw);
+
         return Array.isArray(parsed)
             ? parsed
             : [];
-    }
-    catch (_a) {
+
+    } catch {
         return [];
     }
 }
-function saveCart(cart) {
-    localStorage.setItem("cart", JSON.stringify(cart));
+
+function saveCart(cart: any[]) {
+    localStorage.setItem(
+        "cart",
+        JSON.stringify(cart)
+    );
 }
-/* ===============================
-   MODIFY ITEMS
-================================ */
-function removeItem(id) {
-    var cart = getCart().filter(function (i) { return String(i.id) !== String(id); });
+
+function removeItemByIndex(index: number) {
+
+    const cart = getCart();
+
+    cart.splice(index, 1);
+
     saveCart(cart);
 }
-/* ===============================
-   UPDATE COUNT
-================================ */
-function updateCartCount(count) {
-    var badge = document.getElementById("cartCount");
-    if (badge)
-        badge.textContent =
-            count.toString();
+
+function updateInstanceCode(
+    index: number,
+    code: string
+) {
+
+    const cart = getCart();
+
+    cart[index].instance_code = code;
+
+    saveCart(cart);
 }
-/* ===============================
-   TOTAL PRICE
-================================ */
-function calcCartTotal(cart) {
-    var total = 0;
-    for (var i = 0; i < cart.length; i++) {
-        var item = cart[i];
-        var price = Number(item.price) || 0;
-        var qty = Number(item.qty) || 0;
-        total += price * qty;
+
+function updateCartCount(count: number) {
+
+    const badge =
+        document.getElementById("cartCount");
+
+    if (badge) {
+        badge.textContent = count.toString();
     }
+}
+
+function calcCartTotal(cart: any[]) {
+
+    let total = 0;
+
+    for (let i = 0; i < cart.length; i++) {
+        total += Number(cart[i].price) || 0;
+    }
+
     return total;
 }
