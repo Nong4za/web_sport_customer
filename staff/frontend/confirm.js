@@ -1,18 +1,25 @@
-console.log("🔥 CONFIRM TS VERSION OK 🔥");
+console.log("🔥 STAFF CONFIRM TS READY 🔥");
+/* ===============================
+GLOBAL
+================================ */
 var equipmentTotal = 0;
 var fieldTotal = 0;
 var extraHourFee = 0;
 var selectedBranchId = null;
 var BASE_HOURS = 3;
+/* ===============================
+INIT
+================================ */
 document.addEventListener("DOMContentLoaded", function () {
+    loadBranch();
     loadBookingInfo();
+    loadCustomerInfo();
     renderItems();
     calcTotals();
     bindSubmit();
-    loadBranch();
 });
 /* ===============================
-   LOAD BRANCH
+LOAD BRANCH
 ================================ */
 function loadBranch() {
     fetch("/sports_rental_system/staff/api/get_selected_branch.php")
@@ -29,27 +36,32 @@ function loadBranch() {
     });
 }
 /* ===============================
-   BOOKING INFO
+LOAD CUSTOMER
+================================ */
+function loadCustomerInfo() {
+    setText("cId", localStorage.getItem("customer_id") || "-");
+    setText("cName", localStorage.getItem("customer_name") || "-");
+    setText("cPhone", localStorage.getItem("customer_phone") || "-");
+    setText("cFaculty", localStorage.getItem("customer_faculty") || "-");
+    setText("cYear", localStorage.getItem("customer_year") || "-");
+}
+/* ===============================
+BOOKING INFO
 ================================ */
 function loadBookingInfo() {
     var date = localStorage.getItem("rentDate");
     var time = localStorage.getItem("timeSlot");
     var hours = Number(localStorage.getItem("rentHours") || 1);
-    var dateEl = document.getElementById("confirmDate");
-    if (dateEl)
-        dateEl.textContent = date || "-";
-    var timeEl = document.getElementById("confirmTime");
-    if (timeEl && time && hours) {
+    setText("confirmDate", date || "-");
+    if (time && hours) {
         var s = Number(time);
         var e = s + hours;
-        timeEl.textContent = "".concat(pad(s), ":00 - ").concat(pad(e), ":00");
+        setText("confirmTime", "".concat(pad(s), ":00 - ").concat(pad(e), ":00"));
     }
-    var hoursEl = document.getElementById("confirmHours");
-    if (hoursEl)
-        hoursEl.textContent = hours.toString();
+    setText("confirmHours", hours.toString());
 }
 /* ===============================
-   ITEMS
+ITEMS
 ================================ */
 function renderItems() {
     var box = document.getElementById("confirmItems");
@@ -68,12 +80,14 @@ function renderItems() {
         var imgHtml = item.image && item.image !== "null"
             ? "<img src=\"".concat(item.image.trim(), "\" alt=\"\">")
             : "";
-        row.innerHTML = "\n            ".concat(imgHtml, "\n\n            <div class=\"confirm-item-info\">\n                <h4>").concat(item.name, "</h4>\n                <small>").concat(isField(item.type) ? "สนาม" : "อุปกรณ์", "</small>\n            </div>\n\n            <div class=\"confirm-item-qty\">\n                x<strong>").concat(qty, "</strong>\n            </div>\n\n            <div class=\"confirm-item-price\">\n                <div class=\"per-hour\">\n                    ").concat(perHourTotal, " \u0E1A\u0E32\u0E17 / \u0E0A\u0E21.\n                </div>\n                <strong>\n                    ").concat(perHourTotal, " \u00D7 ").concat(hours, " = ").concat(total, " \u0E1A\u0E32\u0E17\n                </strong>\n            </div>\n        ");
+        row.innerHTML = "\n\t\t\t".concat(imgHtml, "\n\n\t\t\t<div class=\"confirm-item-info\">\n\t\t\t\t<h4>").concat(item.name, "</h4>\n\t\t\t\t<small>\n\t\t\t\t\t").concat(isField(item.type)
+            ? "สนาม"
+            : "รหัสอุปกรณ์: " + (item.instance_code || "-"), "\n\t\t\t\t</small>\n\t\t\t</div>\n\n\t\t\t<div class=\"confirm-item-qty\">\n\t\t\t\tx<strong>").concat(qty, "</strong>\n\t\t\t</div>\n\n\t\t\t<div class=\"confirm-item-price\">\n\t\t\t\t<div class=\"per-hour\">\n\t\t\t\t\t").concat(perHourTotal, " \u0E1A\u0E32\u0E17 / \u0E0A\u0E21.\n\t\t\t\t</div>\n\t\t\t\t<strong>\n\t\t\t\t\t").concat(perHourTotal, " \u00D7 ").concat(hours, "\n\t\t\t\t\t= ").concat(total, " \u0E1A\u0E32\u0E17\n\t\t\t\t</strong>\n\t\t\t</div>\n\t\t");
         box.appendChild(row);
     });
 }
 /* ===============================
-   TOTAL CALC
+TOTAL CALC
 ================================ */
 function calcTotals() {
     equipmentTotal = 0;
@@ -108,55 +122,56 @@ function calcExtraHourFee(hours) {
     return 0;
 }
 /* ===============================
-   UPDATE TOTAL UI
+UPDATE TOTAL UI
 ================================ */
 function updateTotals() {
     var gross = equipmentTotal +
         fieldTotal +
         extraHourFee;
-    var net = gross;
     setText("equipmentTotal", equipmentTotal + " บาท");
     setText("fieldTotal", fieldTotal + " บาท");
     setText("extraHourFee", extraHourFee + " บาท");
-    setText("netTotal", net + " บาท");
-    setText("earnPoints", Math.floor(net / 100).toString());
+    setText("netTotal", gross + " บาท");
+    setText("earnPoints", Math.floor(gross / 100).toString());
 }
 /* ===============================
-   SUBMIT
+SUBMIT
 ================================ */
 function bindSubmit() {
     var _a;
-    (_a = document.getElementById("payBtn")) === null || _a === void 0 ? void 0 : _a.addEventListener("click", function () {
-        var ok = confirm("เมื่อกดยืนยัน ระบบจะทำการจองรายการ และให้ดำเนินการชำระเงินทันที\n\nต้องการดำเนินการต่อหรือไม่?");
+    (_a = document
+        .getElementById("payBtn")) === null || _a === void 0 ? void 0 : _a.addEventListener("click", function () {
+        var ok = confirm("ยืนยันการสร้างรายการจอง และไปหน้าชำระเงินหรือไม่?");
         if (!ok)
             return;
         var branchId = localStorage.getItem("branchId");
-        if (!branchId) {
-            alert("❌ กรุณาเลือกสาขาก่อนทำการจอง");
-            window.location.href = "branches.html";
+        var customerId = localStorage.getItem("customer_id");
+        if (!branchId || !customerId) {
+            alert("❌ ข้อมูลไม่ครบ");
             return;
         }
         var rawDate = localStorage.getItem("rentDate");
         if (rawDate && rawDate.indexOf("/") !== -1) {
-            var parts = rawDate.split("/");
+            var p = rawDate.split("/");
             rawDate =
-                parts[2] + "-" +
-                    parts[1] + "-" +
-                    parts[0];
+                p[2] + "-" +
+                    p[1] + "-" +
+                    p[0];
         }
         var timeSlotRaw = localStorage.getItem("timeSlot");
         if (!rawDate || !timeSlotRaw) {
-            alert("❌ ข้อมูลวันหรือเวลาไม่ครบ");
+            alert("❌ วันหรือเวลาไม่ครบ");
             return;
         }
         var payload = {
             branchId: branchId,
+            customerId: customerId,
             rentDate: rawDate,
             timeSlot: Number(timeSlotRaw),
             rentHours: Number(localStorage.getItem("rentHours") || 1),
             cart: getCart()
         };
-        console.log("🚀 CREATE BOOKING PAYLOAD =>", payload);
+        console.log("🚀 STAFF CREATE BOOKING =>", payload);
         fetch("/sports_rental_system/staff/api/create_booking.php", {
             method: "POST",
             headers: {
@@ -168,7 +183,8 @@ function bindSubmit() {
             .then(function (r) { return r.json(); })
             .then(function (data) {
             if (!data.success) {
-                alert("❌ ไม่สามารถสร้างการจองได้: " + data.message);
+                alert("❌ สร้างการจองไม่ได้: " +
+                    data.message);
                 return;
             }
             window.location.href =
@@ -176,12 +192,12 @@ function bindSubmit() {
         })
             .catch(function (err) {
             console.error(err);
-            alert("❌ เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์");
+            alert("❌ เกิดข้อผิดพลาดกับเซิร์ฟเวอร์");
         });
     });
 }
 /* ===============================
-   UTILS
+UTILS
 ================================ */
 function getCart() {
     var raw = localStorage.getItem("cart");

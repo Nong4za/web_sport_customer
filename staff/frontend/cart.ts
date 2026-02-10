@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 function renderCart() {
 
-    
+
 
     const cart = getCart();
 
@@ -127,8 +127,35 @@ function buildCartRow(item: any, index: number) {
     const removeBtn =
         row.querySelector(".cart-item-remove") as HTMLButtonElement;
 
-    loadInstancesForRow(item.id, select, item.instance_code);
-    
+    if (item.type === "field") {
+
+        // ใช้ venue_id เป็น instance เลย
+        updateInstanceCode(index, item.id);
+
+        select.innerHTML = "";
+
+        const opt = document.createElement("option");
+        opt.value = item.id;
+        opt.textContent = item.id;
+
+        select.appendChild(opt);
+        select.value = item.id;
+
+        // ไม่ต้องให้เปลี่ยน
+        select.disabled = true;
+
+    }
+
+    // ===== EQUIPMENT =====
+    else {
+
+        loadInstancesForRow(
+            item.id,
+            select,
+            item.instance_code
+        );
+    }
+
     select.addEventListener("change", () => {
         updateInstanceCode(index, select.value);
         renderCart(); // refresh เพื่อกันซ้ำ
@@ -310,6 +337,22 @@ function setupMemberModal() {
             foundCustomer.name
         );
 
+        localStorage.setItem(
+            "customer_phone",
+            foundCustomer.phone || "-"
+        );
+
+        localStorage.setItem(
+            "customer_faculty",
+            foundCustomer.faculty_name || "-"
+        );
+
+        localStorage.setItem(
+            "customer_year",
+            foundCustomer.study_year || "-"
+        );
+
+
         modal.classList.add("hidden");
 
         const total = calcCartTotal(getCart());
@@ -384,6 +427,41 @@ function fillMemberResult(data: any) {
         facultyRow.classList.add("hidden");
         yearRow.classList.add("hidden");
     }
+}
+
+function loadVenueInstances(
+    venueId: string,
+    selectEl: HTMLSelectElement,
+    selected?: string
+) {
+
+    fetch(
+        "/sports_rental_system/staff/api/get_venue_instances.php?venue_id=" +
+        venueId
+    )
+        .then(res => res.json())
+        .then(data => {
+
+            if (!data.success) return;
+
+            selectEl.innerHTML =
+                `<option value="">-- เลือก --</option>`;
+
+            for (let i = 0; i < data.venues.length; i++) {
+
+                const v = data.venues[i];
+
+                const opt = document.createElement("option");
+                opt.value = v.venue_code;
+                opt.textContent = v.venue_code;
+
+                if (selected === v.venue_code) {
+                    opt.selected = true;
+                }
+
+                selectEl.appendChild(opt);
+            }
+        });
 }
 
 /* ===============================

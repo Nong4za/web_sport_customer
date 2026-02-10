@@ -77,7 +77,22 @@ function buildCartRow(item, index) {
     row.innerHTML = "\n        <img src=\"".concat(img, "\">\n\n        <div class=\"cart-item-info\">\n            <h4>").concat(item.name, "</h4>\n            <small>\u0E40\u0E25\u0E37\u0E2D\u0E01\u0E2B\u0E21\u0E32\u0E22\u0E40\u0E25\u0E02\u0E2D\u0E38\u0E1B\u0E01\u0E23\u0E13\u0E4C</small>\n        </div>\n\n        <div class=\"cart-item-qty\">\n            <select class=\"instance-select\">\n                <option value=\"\">-- \u0E40\u0E25\u0E37\u0E2D\u0E01 --</option>\n            </select>\n        </div>\n\n        <button class=\"cart-item-remove\">\n            <i class=\"fa-solid fa-trash\"></i>\n        </button>\n    ");
     var select = row.querySelector(".instance-select");
     var removeBtn = row.querySelector(".cart-item-remove");
-    loadInstancesForRow(item.id, select, item.instance_code);
+    if (item.type === "field") {
+        // ใช้ venue_id เป็น instance เลย
+        updateInstanceCode(index, item.id);
+        select.innerHTML = "";
+        var opt = document.createElement("option");
+        opt.value = item.id;
+        opt.textContent = item.id;
+        select.appendChild(opt);
+        select.value = item.id;
+        // ไม่ต้องให้เปลี่ยน
+        select.disabled = true;
+    }
+    // ===== EQUIPMENT =====
+    else {
+        loadInstancesForRow(item.id, select, item.instance_code);
+    }
     select.addEventListener("change", function () {
         updateInstanceCode(index, select.value);
         renderCart(); // refresh เพื่อกันซ้ำ
@@ -193,6 +208,9 @@ function setupMemberModal() {
             return;
         localStorage.setItem("customer_id", foundCustomer.customer_id);
         localStorage.setItem("customer_name", foundCustomer.name);
+        localStorage.setItem("customer_phone", foundCustomer.phone || "-");
+        localStorage.setItem("customer_faculty", foundCustomer.faculty_name || "-");
+        localStorage.setItem("customer_year", foundCustomer.study_year || "-");
         modal.classList.add("hidden");
         var total = calcCartTotal(getCart());
         localStorage.setItem("cartTotal", total.toString());
@@ -243,6 +261,27 @@ function fillMemberResult(data) {
         facultyRow.classList.add("hidden");
         yearRow.classList.add("hidden");
     }
+}
+function loadVenueInstances(venueId, selectEl, selected) {
+    fetch("/sports_rental_system/staff/api/get_venue_instances.php?venue_id=" +
+        venueId)
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+        if (!data.success)
+            return;
+        selectEl.innerHTML =
+            "<option value=\"\">-- \u0E40\u0E25\u0E37\u0E2D\u0E01 --</option>";
+        for (var i = 0; i < data.venues.length; i++) {
+            var v = data.venues[i];
+            var opt = document.createElement("option");
+            opt.value = v.venue_code;
+            opt.textContent = v.venue_code;
+            if (selected === v.venue_code) {
+                opt.selected = true;
+            }
+            selectEl.appendChild(opt);
+        }
+    });
 }
 /* ===============================
    HELPERS
