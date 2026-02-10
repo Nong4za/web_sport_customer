@@ -47,7 +47,7 @@ body {
 
 /* USER */
 
-.staff-zone {
+.user-zone {
     display: flex;
     gap: 10px;
     align-items: center;
@@ -478,6 +478,19 @@ body {
     font-size: 13px;
     color: #888;
 }
+.coupon-msg {
+	margin-top: 6px;
+	font-size: 14px;
+}
+
+.coupon-msg.success {
+	color: #16a34a;
+}
+
+.coupon-msg.error {
+	color: #dc2626;
+}
+
 
 
 /* ================= MOBILE ================= */

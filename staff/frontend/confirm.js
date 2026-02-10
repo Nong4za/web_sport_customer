@@ -2,6 +2,10 @@ console.log("🔥 STAFF CONFIRM TS READY 🔥");
 /* ===============================
 GLOBAL
 ================================ */
+var USER_POINTS = 0;
+var usedPoints = 0;
+var couponDiscount = 0;
+var couponCode = "";
 var equipmentTotal = 0;
 var fieldTotal = 0;
 var extraHourFee = 0;
@@ -16,6 +20,8 @@ document.addEventListener("DOMContentLoaded", function () {
     loadCustomerInfo();
     renderItems();
     calcTotals();
+    bindPointControls();
+    bindCoupon();
     bindSubmit();
 });
 /* ===============================
@@ -25,12 +31,11 @@ function loadBranch() {
     fetch("/sports_rental_system/staff/api/get_selected_branch.php")
         .then(function (res) { return res.json(); })
         .then(function (res) {
-        var _a;
         if (!res || res.success === false) {
             window.location.href = "branches.html";
             return;
         }
-        var data = (_a = res.data) !== null && _a !== void 0 ? _a : res;
+        var data = res.data || res;
         selectedBranchId = data.branch_id;
         localStorage.setItem("branchId", data.branch_id);
     });
@@ -44,6 +49,8 @@ function loadCustomerInfo() {
     setText("cPhone", localStorage.getItem("customer_phone") || "-");
     setText("cFaculty", localStorage.getItem("customer_faculty") || "-");
     setText("cYear", localStorage.getItem("customer_year") || "-");
+    USER_POINTS = Number(localStorage.getItem("customer_points") || 0);
+    setText("availablePoints", USER_POINTS.toString());
 }
 /* ===============================
 BOOKING INFO
@@ -56,7 +63,7 @@ function loadBookingInfo() {
     if (time && hours) {
         var s = Number(time);
         var e = s + hours;
-        setText("confirmTime", "".concat(pad(s), ":00 - ").concat(pad(e), ":00"));
+        setText("confirmTime", pad(s) + ":00 - " + pad(e) + ":00");
     }
     setText("confirmHours", hours.toString());
 }
@@ -78,11 +85,35 @@ function renderItems() {
         var row = document.createElement("div");
         row.className = "confirm-item";
         var imgHtml = item.image && item.image !== "null"
-            ? "<img src=\"".concat(item.image.trim(), "\" alt=\"\">")
+            ? '<img src="' + item.image.trim() + '" alt="">'
             : "";
-        row.innerHTML = "\n\t\t\t".concat(imgHtml, "\n\n\t\t\t<div class=\"confirm-item-info\">\n\t\t\t\t<h4>").concat(item.name, "</h4>\n\t\t\t\t<small>\n\t\t\t\t\t").concat(isField(item.type)
-            ? "สนาม"
-            : "รหัสอุปกรณ์: " + (item.instance_code || "-"), "\n\t\t\t\t</small>\n\t\t\t</div>\n\n\t\t\t<div class=\"confirm-item-qty\">\n\t\t\t\tx<strong>").concat(qty, "</strong>\n\t\t\t</div>\n\n\t\t\t<div class=\"confirm-item-price\">\n\t\t\t\t<div class=\"per-hour\">\n\t\t\t\t\t").concat(perHourTotal, " \u0E1A\u0E32\u0E17 / \u0E0A\u0E21.\n\t\t\t\t</div>\n\t\t\t\t<strong>\n\t\t\t\t\t").concat(perHourTotal, " \u00D7 ").concat(hours, "\n\t\t\t\t\t= ").concat(total, " \u0E1A\u0E32\u0E17\n\t\t\t\t</strong>\n\t\t\t</div>\n\t\t");
+        row.innerHTML =
+            imgHtml +
+                '<div class="confirm-item-info">' +
+                '<h4>' + item.name + '</h4>' +
+                '<small>' +
+                (isField(item.type)
+                    ? "รหัสสนาม: " +
+                        (item.venue_code || item.instance_code || "-")
+                    : "รหัสอุปกรณ์: " +
+                        (item.instance_code || "-")) +
+                '</small>' +
+                '</div>' +
+                '<div class="confirm-item-qty">x<strong>' +
+                qty +
+                '</strong></div>' +
+                '<div class="confirm-item-price">' +
+                '<div class="per-hour">' +
+                perHourTotal +
+                ' บาท / ชม.</div>' +
+                '<strong>' +
+                perHourTotal +
+                ' × ' +
+                hours +
+                ' = ' +
+                total +
+                ' บาท</strong>' +
+                '</div>';
         box.appendChild(row);
     });
 }
@@ -128,19 +159,111 @@ function updateTotals() {
     var gross = equipmentTotal +
         fieldTotal +
         extraHourFee;
+    var net = Math.max(gross -
+        usedPoints -
+        couponDiscount, 0);
     setText("equipmentTotal", equipmentTotal + " บาท");
     setText("fieldTotal", fieldTotal + " บาท");
     setText("extraHourFee", extraHourFee + " บาท");
-    setText("netTotal", gross + " บาท");
-    setText("earnPoints", Math.floor(gross / 100).toString());
+    setText("pointDiscount", usedPoints.toString());
+    setText("couponDiscount", couponDiscount.toString());
+    setText("netTotal", net + " บาท");
+    setText("earnPoints", Math.floor(net / 100).toString());
+}
+/* ===============================
+POINT CONTROLS
+================================ */
+function bindPointControls() {
+    var input = document.getElementById("usePointInput");
+    if (!input)
+        return;
+    input.addEventListener("change", function () {
+        var gross = equipmentTotal +
+            fieldTotal +
+            extraHourFee;
+        var v = Number(input.value || 0);
+        if (v > USER_POINTS)
+            v = USER_POINTS;
+        if (v > gross)
+            v = gross;
+        usedPoints = v;
+        input.value = v.toString();
+        updateTotals();
+    });
+}
+/* ===============================
+COUPON
+================================ */
+function bindCoupon() {
+    var btn = document.getElementById("applyCoupon");
+    if (!btn)
+        return;
+    btn.addEventListener("click", function () {
+        var input = document.getElementById("couponInput");
+        if (!input)
+            return;
+        var code = input.value.trim();
+        if (!code)
+            return;
+        var gross = equipmentTotal +
+            fieldTotal +
+            extraHourFee;
+        fetch("/sports_rental_system/staff/api/check_coupon.php", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({
+                code: code,
+                total: gross,
+                cart: getCart(),
+                customerId: localStorage.getItem("customer_id")
+            })
+        })
+            .then(function (r) { return r.json(); })
+            .then(function (res) {
+            var msg = document.getElementById("couponMsg");
+            if (!res.success) {
+                if (msg) {
+                    msg.textContent =
+                        res.message || "คูปองใช้ไม่ได้";
+                    msg.className =
+                        "coupon-msg error";
+                }
+                couponDiscount = 0;
+                couponCode = null;
+                updateTotals();
+                return;
+            }
+            if (res.type === "percent") {
+                couponDiscount =
+                    Math.floor(gross *
+                        Number(res.discount) / 100);
+            }
+            else {
+                couponDiscount =
+                    Number(res.discount || 0);
+            }
+            couponCode = code;
+            if (msg) {
+                msg.textContent =
+                    "ใช้คูปองสำเร็จ ลด " +
+                        couponDiscount +
+                        " บาท";
+                msg.className =
+                    "coupon-msg success";
+            }
+            updateTotals();
+        });
+    });
 }
 /* ===============================
 SUBMIT
 ================================ */
 function bindSubmit() {
-    var _a;
-    (_a = document
-        .getElementById("payBtn")) === null || _a === void 0 ? void 0 : _a.addEventListener("click", function () {
+    var btn = document.getElementById("payBtn");
+    if (!btn)
+        return;
+    btn.addEventListener("click", function () {
         var ok = confirm("ยืนยันการสร้างรายการจอง และไปหน้าชำระเงินหรือไม่?");
         if (!ok)
             return;
@@ -169,14 +292,15 @@ function bindSubmit() {
             rentDate: rawDate,
             timeSlot: Number(timeSlotRaw),
             rentHours: Number(localStorage.getItem("rentHours") || 1),
+            usedPoints: usedPoints,
+            couponDiscount: couponDiscount,
+            couponCode: couponCode,
             cart: getCart()
         };
         console.log("🚀 STAFF CREATE BOOKING =>", payload);
         fetch("/sports_rental_system/staff/api/create_booking.php", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
+            headers: { "Content-Type": "application/json" },
             credentials: "include",
             body: JSON.stringify(payload)
         })
@@ -188,11 +312,11 @@ function bindSubmit() {
                 return;
             }
             window.location.href =
-                "payment.html?code=".concat(data.booking_code);
+                data.redirect;
         })
             .catch(function (err) {
             console.error(err);
-            alert("❌ เกิดข้อผิดพลาดกับเซิร์ฟเวอร์");
+            alert("❌ เซิร์ฟเวอร์ผิดพลาด");
         });
     });
 }

@@ -40,7 +40,7 @@ JOIN booking_details bd
   ON b.booking_id = bd.booking_id
 WHERE
   bd.item_type = 'venue'
-  AND b.status_id IN (3,4)
+  AND b.booking_status_id IN (3,4)
   AND (
     b.pickup_time < ?
     AND b.due_return_time > ?

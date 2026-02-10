@@ -22,8 +22,10 @@
 				<small>Sports Equipment Rental System</small>
 			</div>
 
-			<div class="staff-zone"></div>
-			<a href="profile.html" class="profile-btn">👤 โปรไฟล์</a>
+			<div class="staff-zone">
+				<a href="profile.html" class="profile-btn">👤 โปรไฟล์</a>
+			</div>
+
 		</div>
 
 		<div class="header-bottom">
@@ -34,13 +36,13 @@
 				<a href="history_point.html" class="nav-item">สถานะอุปกรณ์</a>
 			</nav>
 		</div>
-
 	</header>
 
 	<!-- ================= MAIN ================= -->
 
 	<main class="container">
 
+		<!-- PANEL -->
 		<div class="confirm-panel">
 
 			<!-- SUMMARY -->
@@ -56,37 +58,6 @@
 
 					จำนวนชั่วโมง:
 					<strong id="confirmHours">-</strong> ชั่วโมง
-				</div>
-			</section>
-
-			<!-- MEMBER INFO -->
-			<section class="section member-box">
-
-				<h3>ข้อมูลผู้เช่า</h3>
-
-				<div class="row">
-					<span>ชื่อ</span>
-					<strong id="cName">-</strong>
-				</div>
-
-				<div class="row">
-					<span>รหัสสมาชิก</span>
-					<strong id="cId">-</strong>
-				</div>
-
-				<div class="row">
-					<span>เบอร์โทร</span>
-					<strong id="cPhone">-</strong>
-				</div>
-
-				<div class="row">
-					<span>คณะ</span>
-					<strong id="cFaculty">-</strong>
-				</div>
-
-				<div class="row">
-					<span>ชั้นปี</span>
-					<strong id="cYear">-</strong>
 				</div>
 
 			</section>
@@ -117,6 +88,22 @@
 					<strong id="extraHourFee">0 บาท</strong>
 				</div>
 
+
+				<div class="row discount-row">
+
+					<div>
+						<span>ใช้แต้ม</span>
+						<strong>-<span id="pointDiscount">0</span> บาท</strong>
+					</div>
+
+					<div>
+						<span>คูปอง</span>
+						<strong>-<span id="couponDiscount">0</span> บาท</strong>
+					</div>
+
+				</div>
+
+
 				<hr>
 
 				<div class="row total">
@@ -127,6 +114,40 @@
 				<div class="earn">
 					ได้รับ <span id="earnPoints">0</span> แต้ม
 				</div>
+
+			</section>
+
+			<!-- USE POINT -->
+			<section class="section">
+
+				<h3>ใช้แต้มสะสม</h3>
+
+				<p>คุณมี <strong id="userPoints">0</strong> แต้ม</p>
+
+				<div class="point-box">
+					<button id="minusPoint">−</button>
+					<input id="usePointInput" type="number" value="0" min="0">
+					<button id="plusPoint">+</button>
+
+					<button id="useMaxPoint" class="mini-btn">
+						ใช้ทั้งหมด
+					</button>
+				</div>
+
+			</section>
+
+			<!-- COUPON -->
+			<section class="section">
+
+				<h3>ใช้โค้ดส่วนลด</h3>
+
+				<div class="coupon-box">
+					<input id="couponInput" type="text" placeholder="ใส่รหัสคูปอง">
+					<button id="applyCoupon">ใช้คูปอง</button>
+				</div>
+
+				<p id="couponMsg" class="msg"></p>
+
 			</section>
 
 			<!-- ACTION -->
@@ -136,9 +157,7 @@
 					กลับตะกร้า
 				</a>
 
-				<button id="payBtn" type="button" class="primary-btn">
-					ชำระเงิน
-				</button>
+				<button id="payBtn" type="button" class="primary-btn">ชำระเงิน</button>
 
 			</section>
 

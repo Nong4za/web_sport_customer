@@ -3,15 +3,29 @@ ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
 session_start();
-require_once "database.php";
+require_once "../../database.php";
 
 header("Content-Type: application/json; charset=utf-8");
 
 /* ===============================
-   READ JSON INPUT
+   STAFF AUTH
 ================================ */
 
-$raw = file_get_contents("php://input");
+if (!isset($_SESSION["staff_id"])) {
+    echo json_encode([
+        "success" => false,
+        "message" => "เฉพาะเจ้าหน้าที่เท่านั้น"
+    ]);
+    exit;
+}
+
+$staffId = $_SESSION["staff_id"];
+
+/* ===============================
+   READ JSON
+================================ */
+
+$raw  = file_get_contents("php://input");
 $data = json_decode($raw, true);
 
 if (!$data) {
@@ -31,8 +45,16 @@ $cart       = $data["cart"] ?? [];
 $rentDate   = $data["rentDate"] ?? null;
 $timeSlot   = isset($data["timeSlot"]) ? (int)$data["timeSlot"] : null;
 $rentHours  = (int)($data["rentHours"] ?? 1);
+
+$usedPoints     = (int)($data["usedPoints"] ?? 0);
+$couponDiscount = (float)($data["couponDiscount"] ?? 0);
+
+$couponCode = !empty($data["couponCode"])
+    ? trim($data["couponCode"])
+    : null;
+
 $branchId   = $data["branchId"] ?? null;
-$customerId = $_SESSION["customer_id"] ?? null;
+$customerId = $data["customerId"] ?? null;
 
 /* ===============================
    VALIDATE
@@ -64,19 +86,34 @@ $conn->begin_transaction();
 try {
 
     /* ===============================
-       HELPERS
+       MASTER IDS
     ================================ */
 
     function getIdByCode($conn, $table, $code) {
 
-        $sql = "SELECT id FROM {$table} WHERE code = ? LIMIT 1";
-        $stmt = $conn->prepare($sql);
+        $stmt = $conn->prepare(
+            "SELECT id FROM {$table} WHERE code = ? LIMIT 1"
+        );
+
         $stmt->bind_param("s", $code);
         $stmt->execute();
 
         $res = $stmt->get_result()->fetch_assoc();
+
         return $res ? (int)$res["id"] : null;
     }
+
+    $bookingStatusId = getIdByCode($conn, "booking_status", "WAITING_STAFF");
+    $paymentStatusId = getIdByCode($conn, "payment_status", "UNPAID");
+    $bookingTypeId   = getIdByCode($conn, "booking_types", "WALK_IN");
+
+    if (!$bookingStatusId || !$paymentStatusId || !$bookingTypeId) {
+        throw new Exception("ไม่พบ master status/type");
+    }
+
+    /* ===============================
+       BOOKING CODE
+    ================================ */
 
     function generateBookingCode($conn) {
 
@@ -88,6 +125,7 @@ try {
             $stmt = $conn->prepare(
                 "SELECT 1 FROM bookings WHERE booking_id = ?"
             );
+
             $stmt->bind_param("s", $code);
             $stmt->execute();
             $stmt->store_result();
@@ -97,17 +135,7 @@ try {
         return $code;
     }
 
-    /* ===============================
-       LOOKUP MASTER
-    ================================ */
-
-    $bookingStatusId = getIdByCode($conn, "booking_status", "WAITING_STAFF");
-    $paymentStatusId = getIdByCode($conn, "payment_status", "UNPAID");
-    $bookingTypeId   = getIdByCode($conn, "booking_types", "ONLINE");
-
-    if (!$bookingStatusId || !$paymentStatusId || !$bookingTypeId) {
-        throw new Exception("ไม่พบ master status/type ในระบบ");
-    }
+    $bookingCode = generateBookingCode($conn);
 
     /* ===============================
        DATETIME
@@ -142,29 +170,28 @@ try {
     elseif ($rentHours === 5) $extraHourFee = 200;
     elseif ($rentHours >= 6) $extraHourFee = 300;
 
-    $discountAmount = 0;
-    $pointsUsedValue = 0;
+    $gross = $totalAmount + $extraHourFee;
 
-    $netAmount =
-        max(
-            ($totalAmount + $extraHourFee),
-            0
-        );
+    $pointsUsedValue = $usedPoints;
 
-    $pointsEarned = 0;
-	$couponCode = null;
-	$usedPoints = 0;
+    $netAmount = max(
+        $gross -
+        $couponDiscount -
+        $pointsUsedValue,
+        0
+    );
+
+    $pointsEarned = floor($netAmount / 100);
 
     /* ===============================
        INSERT BOOKINGS
     ================================ */
 
-    $bookingCode = generateBookingCode($conn);
-
     $stmt = $conn->prepare("
         INSERT INTO bookings (
             booking_id,
             customer_id,
+            staff_id,
             branch_id,
             booking_type_id,
             booking_status_id,
@@ -174,15 +201,20 @@ try {
             total_amount,
             discount_amount,
             extra_hour_fee,
-            net_amount
+            net_amount,
+            coupon_code,
+            points_used,
+            points_used_value,
+            points_earned
         )
-        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
     ");
 
     $stmt->bind_param(
-        "sssiiissddddsidi",
+        "ssssiiissddddsiii",
         $bookingCode,
         $customerId,
+        $staffId,
         $branchId,
         $bookingTypeId,
         $bookingStatusId,
@@ -190,9 +222,13 @@ try {
         $pickup,
         $return,
         $totalAmount,
-        $discountAmount,
+        $couponDiscount,
         $extraHourFee,
-        $netAmount
+        $netAmount,
+        $couponCode,
+        $usedPoints,
+        $pointsUsedValue,
+        $pointsEarned
     );
 
     if (!$stmt->execute()) {
@@ -200,7 +236,7 @@ try {
     }
 
     /* ===============================
-       INSERT DETAILS (FIX FK)
+       INSERT DETAILS
     ================================ */
 
     $dStmt = $conn->prepare("
@@ -217,35 +253,28 @@ try {
 
     foreach ($cart as $item) {
 
-        $type = strtolower($item["type"] ?? "");
+        $typeRaw = strtolower($item["type"] ?? "");
 
         $equipmentId = null;
-        $venueId = null;
+        $venueId     = null;
 
-        if ($type === "venue" || $type === "field") {
-
+        if ($typeRaw === "field" || $typeRaw === "venue") {
             $type = "Venue";
-            $venueId = trim($item["id"]);
-
+            $venueId = $item["id"];
         } else {
-
             $type = "Equipment";
-            $equipmentId = trim($item["id"]);
+            $equipmentId = $item["id"];
         }
 
         $qty   = (int)$item["qty"];
         $price = (float)$item["price"];
 
-        // 👉 สำคัญ: NULL ต้องเป็น NULL จริง
-        $eq = $equipmentId ?: null;
-        $vn = $venueId ?: null;
-
         $dStmt->bind_param(
-            "sssssd",
+            "ssssid",
             $bookingCode,
             $type,
-            $eq,
-            $vn,
+            $equipmentId,
+            $venueId,
             $qty,
             $price
         );
@@ -253,13 +282,102 @@ try {
         if (!$dStmt->execute()) {
             throw new Exception("booking_details error: " . $dStmt->error);
         }
+
+        /* ===== update equipment_instances ===== */
+
+        if ($type === "Equipment" && !empty($item["instance_code"])) {
+
+            $loc = "Customer";
+
+            $u = $conn->prepare("
+                UPDATE equipment_instances
+                SET status = 'Rented',
+                    current_location = ?
+                WHERE instance_code = ?
+            ");
+
+            $u->bind_param(
+                "ss",
+                $loc,
+                $item["instance_code"]
+            );
+
+            if (!$u->execute()) {
+                throw new Exception("update equipment_instances fail");
+            }
+        }
+    }
+
+    /* ===============================
+       COUPON
+    ================================ */
+
+    if ($couponCode) {
+
+        $stmt = $conn->prepare("
+            INSERT INTO coupon_usages
+            (coupon_code, customer_id, booking_id)
+            VALUES (?, ?, ?)
+        ");
+
+        $stmt->bind_param(
+            "sss",
+            $couponCode,
+            $customerId,
+            $bookingCode
+        );
+
+        $stmt->execute();
+
+        $conn->query("
+            UPDATE coupons
+            SET used_count = used_count + 1
+            WHERE code = '$couponCode'
+        ");
+    }
+
+    /* ===============================
+       POINT HISTORY
+    ================================ */
+
+    if ($usedPoints > 0) {
+
+        $conn->prepare("
+            UPDATE customers
+            SET current_points = current_points - $usedPoints
+            WHERE customer_id = '$customerId'
+        ")->execute();
+
+        $conn->prepare("
+            INSERT INTO point_history
+            (customer_id, booking_id, type, amount, description)
+            VALUES ('$customerId','$bookingCode','redeem',$usedPoints,'ใช้แต้มแลกส่วนลด')
+        ")->execute();
+    }
+
+    if ($pointsEarned > 0) {
+
+        $conn->prepare("
+            UPDATE customers
+            SET current_points = current_points + $pointsEarned
+            WHERE customer_id = '$customerId'
+        ")->execute();
+
+        $conn->prepare("
+            INSERT INTO point_history
+            (customer_id, booking_id, type, amount, description)
+            VALUES ('$customerId','$bookingCode','earn',$pointsEarned,'ได้แต้มจากการเช่า')
+        ")->execute();
     }
 
     $conn->commit();
 
     echo json_encode([
         "success" => true,
-        "booking_code" => $bookingCode
+        "booking_code" => $bookingCode,
+        "redirect" =>
+            "/sports_rental_system/staff/frontend/payment_method.html?code=" .
+            $bookingCode
     ]);
 
 } catch (Exception $e) {
@@ -271,3 +389,5 @@ try {
         "message" => $e->getMessage()
     ]);
 }
+
+$conn->close();
