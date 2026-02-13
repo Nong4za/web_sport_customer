@@ -128,3 +128,50 @@ try {
         "message" => $e->getMessage()
     ]);
 }
+/* ========================================
+   คืนคะแนนให้ลูกค้า (ถ้ามีการใช้แต้ม)
+======================================== */
+
+$getBooking = $conn->prepare("
+    SELECT customer_id, used_points
+    FROM bookings
+    WHERE booking_id = ?
+");
+$getBooking->bind_param("s", $bookingId);
+$getBooking->execute();
+$bookingData = $getBooking->get_result()->fetch_assoc();
+
+if ($bookingData && $bookingData["used_points"] > 0) {
+
+    $customerId = $bookingData["customer_id"];
+    $usedPoints = (int)$bookingData["used_points"];
+
+    // คืนคะแนน
+    $refundStmt = $conn->prepare("
+        UPDATE customers
+        SET points = points + ?
+        WHERE customer_id = ?
+    ");
+    $refundStmt->bind_param("is", $usedPoints, $customerId);
+    $refundStmt->execute();
+
+    // บันทึก log
+    $logStmt = $conn->prepare("
+        INSERT INTO point_transactions
+        (customer_id, booking_id, points_change, note, created_at)
+        VALUES (?, ?, ?, ?, NOW())
+    ");
+
+    $note = "ได้รับคะแนนคืนจากการยกเลิกการจอง";
+
+    $logStmt->bind_param(
+        "ssis",
+        $customerId,
+        $bookingId,
+        $usedPoints,
+        $note
+    );
+
+    $logStmt->execute();
+}
+

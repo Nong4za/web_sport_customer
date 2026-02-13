@@ -52,10 +52,6 @@
             เกินกำหนด (<span id="count-OVERDUE">0</span>)
         </button>
 
-        <button class="status-tab" data-status="RETURNED">
-            คืนแล้ว (<span id="count-RETURNED">0</span>)
-        </button>
-
     </div>
 
     <!-- LIST -->
@@ -67,28 +63,36 @@
 
 <!-- RETURN MODAL -->
 
+<!-- RETURN MODAL -->
+
 <div id="returnModal" class="modal hidden">
 
-    <div class="modal-box">
+    <div class="modal-box large">
 
-        <h3>ยืนยันการรับคืน</h3>
+        <h3>รับคืนอุปกรณ์</h3>
 
-        <p>
-            ต้องการรับคืนรายการนี้หรือไม่?
-        </p>
+        <!-- รายการอุปกรณ์ -->
+        <div id="returnItems" class="return-items">
+            <!-- JS จะใส่รายการตรงนี้ -->
+        </div>
+
+        <!-- สรุปค่าปรับ -->
+        <div id="penaltySummary" class="penalty-summary">
+            <!-- JS จะคำนวณมาแสดงตรงนี้ -->
+        </div>
 
         <div class="modal-actions">
 
             <button
                 id="returnModalClose"
                 class="btn-outline">
-                ย้อนกลับ
+                ยกเลิก
             </button>
 
             <button
                 id="returnModalConfirm"
                 class="btn-approve">
-                รับคืนอุปกรณ์
+                ยืนยันการคืน
             </button>
 
         </div>
@@ -96,6 +100,7 @@
     </div>
 
 </div>
+
 
 <script src="return.js"></script>
 

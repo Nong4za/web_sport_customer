@@ -336,3 +336,63 @@ if (!empty($couponCode)) {
         throw new Exception("ไม่สามารถอัปเดตจำนวนการใช้คูปองได้");
     }
 }
+
+/* =========================================
+   ตัดคะแนน (ถ้ามีการใช้แต้ม)
+========================================= */
+
+if ($usedPoints > 0) {
+
+    // เช็คคะแนนปัจจุบันก่อน
+    $checkPoint = $conn->prepare("
+        SELECT points
+        FROM customers
+        WHERE customer_id = ?
+        FOR UPDATE
+    ");
+    $checkPoint->bind_param("s", $customerId);
+    $checkPoint->execute();
+    $pointRow = $checkPoint->get_result()->fetch_assoc();
+
+    if (!$pointRow) {
+        throw new Exception("ไม่พบลูกค้า");
+    }
+
+    if ($pointRow["points"] < $usedPoints) {
+        throw new Exception("คะแนนไม่เพียงพอ");
+    }
+
+    // ตัดคะแนน
+    $updatePoint = $conn->prepare("
+        UPDATE customers
+        SET points = points - ?
+        WHERE customer_id = ?
+    ");
+
+    $updatePoint->bind_param("is", $usedPoints, $customerId);
+
+    if (!$updatePoint->execute()) {
+        throw new Exception("ตัดคะแนนไม่สำเร็จ");
+    }
+
+    // บันทึก log
+    $note = "ใช้คะแนนในการจอง {$bookingCode}";
+
+    $insertLog = $conn->prepare("
+        INSERT INTO point_transactions
+        (customer_id, booking_id, points_change, note, created_at)
+        VALUES (?, ?, ?, ?, NOW())
+    ");
+
+    $minusPoints = -$usedPoints;
+
+    $insertLog->bind_param(
+        "ssis",
+        $customerId,
+        $bookingCode,
+        $minusPoints,
+        $note
+    );
+
+    $insertLog->execute();
+}

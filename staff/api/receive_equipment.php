@@ -88,7 +88,7 @@ try {
     }
 
     /* ======================================================
-       3. UPDATE booking (ครั้งเดียวจบ)
+       3. UPDATE booking
     ====================================================== */
 
     $statusRow = $conn->query("
@@ -135,4 +135,69 @@ try {
         "success" => false,
         "message" => $e->getMessage()
     ]);
+}
+
+/* ======================================================
+   4. GIVE POINTS WHEN START USING
+====================================================== */
+
+$getBooking = $conn->prepare("
+    SELECT customer_id, points_earned
+    FROM bookings
+    WHERE booking_id = ?
+    LIMIT 1
+");
+
+$getBooking->bind_param("s", $bookingId);
+$getBooking->execute();
+$bookingData = $getBooking->get_result()->fetch_assoc();
+
+if ($bookingData && (int)$bookingData["points_earned"] > 0) {
+
+    $customerId = $bookingData["customer_id"];
+    $pointsEarned = (int)$bookingData["points_earned"];
+
+    $checkLog = $conn->prepare("
+        SELECT 1
+        FROM point_history
+        WHERE booking_id = ?
+          AND type = 'earn'
+        LIMIT 1
+    ");
+
+    $checkLog->bind_param("s", $bookingId);
+    $checkLog->execute();
+    $checkLog->store_result();
+
+    if ($checkLog->num_rows === 0) {
+
+        // เพิ่มคะแนนให้ลูกค้า
+        $updatePoint = $conn->prepare("
+            UPDATE customers
+            SET current_points = current_points + ?
+            WHERE customer_id = ?
+        ");
+
+        $updatePoint->bind_param("is", $pointsEarned, $customerId);
+        $updatePoint->execute();
+
+        // บันทึกประวัติแต้ม
+        $note = "ได้รับแต้มจากการเริ่มใช้งาน Booking {$bookingId}";
+
+        $insertLog = $conn->prepare("
+            INSERT INTO point_history
+            (customer_id, booking_id, type, amount, description)
+            VALUES (?, ?, 'earn', ?, ?)
+        ");
+
+        $insertLog->bind_param(
+            "ssis",
+            $customerId,
+            $bookingId,
+            $pointsEarned,
+            $note
+        );
+
+        $insertLog->execute();
+    }
 }
