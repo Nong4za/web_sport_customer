@@ -8,6 +8,7 @@ document.addEventListener("DOMContentLoaded", function () {
     var selectedBranchId = null;
     var selectedCategories = [];
     var searchKeyword = "";
+    localStorage.removeItem("cart");
     // ============================
     // ELEMENTS
     // ============================
@@ -65,6 +66,8 @@ document.addEventListener("DOMContentLoaded", function () {
         localStorage.removeItem("rentHours");
         localStorage.removeItem("minPrice");
         localStorage.removeItem("maxPrice");
+        localStorage.removeItem("cart");
+        updateCartCount();
         // // ถ้าอยาก clear field ใน cart ด้วย
         // clearFieldInCart();
         // ===== reload =====
@@ -234,9 +237,7 @@ document.addEventListener("DOMContentLoaded", function () {
         .then(function (res) { return res.json(); })
         .then(function (data) {
         if (data.success) {
-            // 1. เก็บ Branch ID ลง State ของหน้า Index
             selectedBranchId = data.branch_id;
-            // 2. แสดงชื่อสาขาบนหน้าจอ (จุดที่เดิมขึ้นว่า "กำลังโหลด...")
             if (branchLabel) {
                 branchLabel.textContent = data.branch_name;
             }

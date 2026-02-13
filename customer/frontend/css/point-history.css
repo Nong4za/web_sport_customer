@@ -153,52 +153,75 @@ body {
     color: #777;
 }
 
-/* img */
+/* ===== Point History List ===== */
 
-.item {
-  display: flex;
-  gap: 12px;
-  padding: 10px 0;
-  border-bottom: 1px dashed #ddd;
-  align-items: center;
+#pointList {
+    margin-top: 12px;
 }
 
-.item-img {
-  width: 90px;
-  height: 70px;
-  object-fit: cover;
-  border-radius: 6px;
-  border: 1px solid #eee;
+.items .item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    padding: 12px 4px;
+    margin-bottom: 6px;
+
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+
+    border-bottom: 1px solid #e5e7eb;
 }
 
-.item-info {
-  font-size: 14px;
-  line-height: 1.5;
+.item .left {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
 }
 
-.slip-box {
-    margin-top: 15px;
+.top-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
-.slip-box span {
-    display: block;
+.item .title {
+    font-size: 15px;
     font-weight: 600;
-    margin-bottom: 8px;
+    color: #111827;
 }
 
-.slip-box img {
-    width: 100%;
-    max-width: 300px;
-    border-radius: 10px;
-    border: 1px solid #ddd;
-    cursor: pointer;
-    transition: 0.2s;
+.item .ref {
+    font-size: 13px;
+    color: #6b7280;
 }
 
-.slip-box img:hover {
-    transform: scale(1.03);
+/* แต้มฝั่งขวา */
+.item .right {
+    font-size: 22px;
+    font-weight: 700;
+    min-width: 80px;
+    text-align: right;
 }
 
-.hidden {
-    display: none;
+.point-plus {
+    color: #16a34a;
+}
+
+.point-minus {
+    color: #dc2626;
+}
+
+.text-plus .title,
+.text-plus .ref {
+    color: #16a34a;
+    /* เขียว = ได้แต้ม */
+}
+
+.text-minus .title,
+.text-minus .ref {
+    color: #dc2626;
+    /* แดง = ใช้แต้ม */
 }

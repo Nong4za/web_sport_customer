@@ -1,55 +1,72 @@
 <?php
+ini_set('display_errors', 0);
+error_reporting(E_ALL);
+
 session_start();
 require_once "../../database.php";
 
 header("Content-Type: application/json; charset=utf-8");
 
-if (!isset($_SESSION["staff_id"])) {
+$code    = $_GET["code"] ?? null;
+$staffId = $_SESSION["staff_id"] ?? null;
+
+/* ===============================
+   VALIDATION
+================================ */
+
+if (!$staffId) {
     echo json_encode([
         "success" => false,
-        "message" => "Unauthorized"
+        "message" => "no staff session"
     ]);
     exit;
 }
-
-$code = $_GET["code"] ?? null;
 
 if (!$code) {
     echo json_encode([
         "success" => false,
-        "message" => "Missing booking code"
+        "message" => "missing booking code"
     ]);
     exit;
 }
 
-/* ================= BOOKING + CUSTOMER ================= */
+/* ===============================
+   MAIN BOOKING
+================================ */
 
 $stmt = $conn->prepare("
-    SELECT
+    SELECT 
         b.booking_id,
         b.pickup_time,
         b.due_return_time,
+        b.total_amount,
         b.net_amount,
+        b.discount_amount,
+        b.extra_hour_fee,
+        b.points_used,
+        b.points_used_value,
+        b.points_earned,
+        b.coupon_code,
+        b.cancelled_at,
+        b.cancellation_reason,
 
-        bs.code AS booking_status,
-        ps.code AS payment_status,
+        bs.name_th   AS booking_status,
+        ps.name_th   AS payment_status,
 
-        c.name AS customer_name,
-        c.phone,
-        c.email
+        br.name AS branch_name,
+
+        p.slip_url,
+        p.paid_at
 
     FROM bookings b
-
-    JOIN booking_status bs
-        ON b.booking_status_id = bs.id
-
-    JOIN payment_status ps
-        ON b.payment_status_id = ps.id
-
-    JOIN customers c
-        ON b.customer_id = c.customer_id
+    JOIN booking_status bs ON b.booking_status_id = bs.id
+    JOIN payment_status ps ON b.payment_status_id = ps.id
+    JOIN branches br ON b.branch_id = br.branch_id
+    LEFT JOIN payments p 
+        ON p.booking_id = b.booking_id
 
     WHERE b.booking_id = ?
+    LIMIT 1
 ");
 
 $stmt->bind_param("s", $code);
@@ -60,93 +77,71 @@ $booking = $stmt->get_result()->fetch_assoc();
 if (!$booking) {
     echo json_encode([
         "success" => false,
-        "message" => "ไม่พบ booking"
+        "message" => "ไม่พบรายการจอง"
     ]);
     exit;
 }
 
-/* ================= BOOKING ITEMS ================= */
+/* ===============================
+   DETAILS
+================================ */
 
-$itemStmt = $conn->prepare("
+$dStmt = $conn->prepare("
     SELECT
-        bd.item_type,
-        bd.quantity,
-        bd.price_at_booking,
+        d.item_type,
+        d.quantity,
+        d.price_at_booking,
 
         e.name AS equipment_name,
-        v.name AS venue_name
+        e.image_url AS equipment_image,
 
-    FROM booking_details bd
+        v.name AS venue_name,
+        v.image_url AS venue_image
 
-    LEFT JOIN equipment_master e
-        ON bd.equipment_id = e.equipment_id
-
+    FROM booking_details d
+    LEFT JOIN equipment_master e 
+        ON d.equipment_id = e.equipment_id
     LEFT JOIN venues v
-        ON bd.venue_id = v.venue_id
+        ON d.venue_id = v.venue_id
 
-    WHERE bd.booking_id = ?
+    WHERE d.booking_id = ?
 ");
 
-$itemStmt->bind_param("s", $code);
-$itemStmt->execute();
+$dStmt->bind_param("s", $code);
+$dStmt->execute();
 
+$res = $dStmt->get_result();
 $items = [];
 
-$res = $itemStmt->get_result();
+while ($row = $res->fetch_assoc()) {
 
-while ($r = $res->fetch_assoc()) {
-    $items[] = $r;
+    if ($row["item_type"] === "Venue") {
+        $items[] = [
+            "type"  => "venue",
+            "name"  => $row["venue_name"],
+            "image" => $row["venue_image"],
+            "qty"   => $row["quantity"],
+            "price" => $row["price_at_booking"]
+        ];
+    } else {
+        $items[] = [
+            "type"  => "equipment",
+            "name"  => $row["equipment_name"],
+            "image" => $row["equipment_image"],
+            "qty"   => $row["quantity"],
+            "price" => $row["price_at_booking"]
+        ];
+    }
 }
 
-/* ================= PAYMENT ================= */
-
-$pStmt = $conn->prepare("
-    SELECT
-        p.amount,
-        p.paid_at,
-        p.slip_url,
-        p.refund_amount,
-        p.refund_at,
-        p.slip_refund,
-        ps.code AS status
-    FROM payments p
-
-    JOIN payment_status ps
-        ON p.payment_status_id = ps.id
-
-    WHERE p.booking_id = ?
-    ORDER BY p.payment_id DESC
-    LIMIT 1
-");
-
-$pStmt->bind_param("s", $code);
-$pStmt->execute();
-
-$payment = $pStmt->get_result()->fetch_assoc();
-
-/* ================= RESPONSE ================= */
+/* ===============================
+   RESPONSE
+================================ */
 
 echo json_encode([
     "success" => true,
-    "data" => [
-        "booking_id" => $booking["booking_id"],
-        "pickup_time" => $booking["pickup_time"],
-        "due_return_time" => $booking["due_return_time"],
-        "net_amount" => $booking["net_amount"],
-
-        "booking_status" => $booking["booking_status"],
-        "payment_status" => $booking["payment_status"],
-
-        "customer" => [
-            "name" => $booking["customer_name"],
-            "phone" => $booking["phone"],
-            "email" => $booking["email"]
-        ],
-
-        "items" => $items,
-
-        "payment" => $payment
-    ]
+    "booking" => $booking,
+    "items"   => $items
 ]);
 
-$conn->close();
+exit;

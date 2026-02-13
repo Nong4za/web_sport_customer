@@ -1,3 +1,5 @@
+let CURRENT_USER_ID: string | null = null;
+
 document.addEventListener("DOMContentLoaded", () => {
 
     console.log("cart.ts loaded");

@@ -286,3 +286,53 @@ try {
         "message" => $e->getMessage()
     ]);
 }
+
+/* ===============================
+   INSERT COUPON USAGE
+================================ */
+
+if (!empty($couponCode)) {
+
+    // 🔎 เช็คว่าเคยใช้หรือยัง
+    $checkCoupon = $conn->prepare("
+        SELECT 1 
+        FROM coupon_usages
+        WHERE coupon_code = ? 
+        AND customer_id = ?
+        LIMIT 1
+    ");
+
+    $checkCoupon->bind_param("ss", $couponCode, $customerId);
+    $checkCoupon->execute();
+    $checkCoupon->store_result();
+
+    if ($checkCoupon->num_rows > 0) {
+        throw new Exception("คุณได้ใช้คูปองนี้ไปแล้ว");
+    }
+
+    $insertCoupon = $conn->prepare("
+        INSERT INTO coupon_usages (
+            coupon_code,
+            customer_id
+        )
+        VALUES (?, ?)
+    ");
+
+    $insertCoupon->bind_param("ss", $couponCode, $customerId);
+
+    if (!$insertCoupon->execute()) {
+        throw new Exception("ไม่สามารถบันทึกการใช้คูปองได้");
+    }
+
+    $updateCoupon = $conn->prepare("
+    UPDATE coupons
+    SET used_count = used_count + 1
+    WHERE code = ?
+    ");
+
+    $updateCoupon->bind_param("s", $couponCode);
+
+    if (!$updateCoupon->execute()) {
+        throw new Exception("ไม่สามารถอัปเดตจำนวนการใช้คูปองได้");
+    }
+}

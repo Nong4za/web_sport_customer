@@ -7,7 +7,7 @@ header("Content-Type: application/json; charset=utf-8");
 $data = json_decode(file_get_contents("php://input"), true);
 
 $bookingId = $data["booking_id"] ?? null;
-$items = $data["items"] ?? [];
+$items     = $data["items"] ?? [];
 
 if (!$bookingId || empty($items)) {
     echo json_encode([
@@ -21,62 +21,104 @@ $conn->begin_transaction();
 
 try {
 
-    /* ============================
-       UPDATE EQUIPMENT INSTANCE
-    ============================ */
+    /* ======================================================
+       1. เช็คก่อนว่า booking ยังไม่ได้ IN_USE
+    ====================================================== */
 
-    $stmt = $conn->prepare("
+    $check = $conn->prepare("
+        SELECT bs.code
+        FROM bookings b
+        JOIN booking_status bs ON b.booking_status_id = bs.id
+        WHERE b.booking_id = ?
+        LIMIT 1
+    ");
+    $check->bind_param("s", $bookingId);
+    $check->execute();
+    $res = $check->get_result()->fetch_assoc();
+
+    if (!$res) {
+        throw new Exception("ไม่พบ booking");
+    }
+
+    if ($res["code"] === "IN_USE") {
+        throw new Exception("รายการนี้ถูกเริ่มใช้งานแล้ว");
+    }
+
+    /* ======================================================
+       2. UPDATE booking_details (instance)
+    ====================================================== */
+
+    $updateDetail = $conn->prepare("
         UPDATE booking_details
         SET equipment_instance_id = ?
         WHERE detail_id = ?
           AND item_type = 'Equipment'
     ");
 
+    $updateInstanceStatus = $conn->prepare("
+        UPDATE equipment_instances
+        SET status = 'Rented',
+            current_location = 'Customer'
+        WHERE instance_code = ?
+    ");
+
     foreach ($items as $i) {
 
-        if (empty($i["instance_code"])) {
-            continue;
-        }
+        if (empty($i["instance_code"])) continue;
 
-        $stmt->bind_param(
+        $updateDetail->bind_param(
             "si",
             $i["instance_code"],
             $i["detail_id"]
         );
 
-        if (!$stmt->execute()) {
+        if (!$updateDetail->execute()) {
             throw new Exception("update booking_details failed");
+        }
+
+        // update instance status
+        $updateInstanceStatus->bind_param(
+            "s",
+            $i["instance_code"]
+        );
+
+        if (!$updateInstanceStatus->execute()) {
+            throw new Exception("update equipment_instances failed");
         }
     }
 
-    /* ============================
-       SET STATUS = IN_USE
-    ============================ */
+    /* ======================================================
+       3. UPDATE booking (ครั้งเดียวจบ)
+    ====================================================== */
 
-    $row = $conn
-        ->query("
-            SELECT id
-            FROM booking_status
-            WHERE code='IN_USE'
-        ")
-        ->fetch_assoc();
+    $statusRow = $conn->query("
+        SELECT id
+        FROM booking_status
+        WHERE code = 'IN_USE'
+        LIMIT 1
+    ")->fetch_assoc();
 
-    if (!$row) {
+    if (!$statusRow) {
         throw new Exception("missing IN_USE status");
     }
 
-    $statusId = $row["id"];
+    $statusId = $statusRow["id"];
 
-    $stmt2 = $conn->prepare("
+    $updateBooking = $conn->prepare("
         UPDATE bookings
-        SET booking_status_id = ?
+        SET actual_pickup_time = NOW(),
+            booking_status_id  = ?
         WHERE booking_id = ?
     ");
 
-    $stmt2->bind_param("is", $statusId, $bookingId);
+    $updateBooking->bind_param("is", $statusId, $bookingId);
 
-    if (!$stmt2->execute()) {
-        throw new Exception("update booking status failed");
+    if (!$updateBooking->execute()) {
+        throw new Exception("update booking failed");
+    }
+
+    if ($updateBooking->affected_rows === 0) {
+        throw new Exception("ไม่พบรายการที่ต้องอัปเดต");
     }
 
     $conn->commit();

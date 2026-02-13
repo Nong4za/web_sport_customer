@@ -180,7 +180,7 @@ try {
         "success" => true,
         "message" => "รับเงินสดเรียบร้อย",
         "redirect" =>
-            "/sports_rental_system/staff/frontend/history.html"
+            "/sports_rental_system/staff/frontend/bookings.html"
     ]);
 
 } catch (Exception $e) {

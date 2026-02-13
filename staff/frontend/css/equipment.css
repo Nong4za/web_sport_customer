@@ -246,15 +246,6 @@ body {
     box-shadow: 0 0 0 2px rgba(255, 122, 0, .15);
 }
 
-/* ================= FLATPICKR FIX ================= */
-
-.flatpickr-calendar {
-    width: 255px !important;
-    font-size: 13px;
-    border-radius: 16px;
-    padding-bottom: 8px;
-}
-
 /* inner layout */
 
 .flatpickr-innerContainer,

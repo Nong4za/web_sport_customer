@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+<meta charset="UTF-8" />
+<title>คืนอุปกรณ์ (เจ้าหน้าที่)</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/return.css" />
+</head>
+
+<body>
+
+<header class="main-header">
+
+    <div class="header-top">
+
+        <div class="brand">
+            <span class="brand-name">ระบบเช่าอุปกรณ์กีฬา</span>
+            <small>Sports Equipment Rental System</small>
+        </div>
+
+        <div class="user-zone">
+            <a href="profile.html" class="profile-btn">👤 โปรไฟล์</a>
+        </div>
+
+    </div>
+
+    <div class="header-bottom">
+      <nav class="main-nav">
+        <a href="index.html" class="nav-item">เช่าอุปกรณ์</a>
+        <a href="bookings.html" class="nav-item">รายการเช่า</a>
+        <a href="return.html" class="nav-item active">คืนอุปกรณ์</a>
+        <a href="history_point.html" class="nav-item">สถานะอุปกรณ์</a>
+      </nav>
+    </div>
+
+</header>
+
+<h2 class="page-title">รายการที่ต้องคืน</h2>
+
+<div class="page-container">
+
+    <!-- STATUS -->
+    <div class="booking-status-tabs">
+
+        <button class="status-tab active" data-status="IN_USE">
+            กำลังใช้งาน (<span id="count-IN_USE">0</span>)
+        </button>
+
+        <button class="status-tab" data-status="OVERDUE">
+            เกินกำหนด (<span id="count-OVERDUE">0</span>)
+        </button>
+
+        <button class="status-tab" data-status="RETURNED">
+            คืนแล้ว (<span id="count-RETURNED">0</span>)
+        </button>
+
+    </div>
+
+    <!-- LIST -->
+    <div class="booking-list" id="returnList">
+        <p class="loading">กำลังโหลด...</p>
+    </div>
+
+</div>
+
+<!-- RETURN MODAL -->
+
+<div id="returnModal" class="modal hidden">
+
+    <div class="modal-box">
+
+        <h3>ยืนยันการรับคืน</h3>
+
+        <p>
+            ต้องการรับคืนรายการนี้หรือไม่?
+        </p>
+
+        <div class="modal-actions">
+
+            <button
+                id="returnModalClose"
+                class="btn-outline">
+                ย้อนกลับ
+            </button>
+
+            <button
+                id="returnModalConfirm"
+                class="btn-approve">
+                รับคืนอุปกรณ์
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script src="return.js"></script>
+
+</body>
+</html>

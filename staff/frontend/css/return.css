@@ -1,0 +1,29 @@
+@import url("bookings.css");
+
+/* ================= RETURN SPECIFIC ================= */
+
+.btn-return {
+    padding: 7px 16px;
+    border-radius: 999px;
+
+    background: #3b82f6;
+    color: white;
+
+    border: none;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.btn-return:hover {
+    background: #2563eb;
+}
+
+.status.overdue {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.status.returned {
+    background: #f3f4f6;
+    color: #374151;
+}

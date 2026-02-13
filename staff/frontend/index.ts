@@ -12,6 +12,8 @@ document.addEventListener("DOMContentLoaded", () => {
 	let selectedCategories: string[] = [];
 	let searchKeyword = "";
 
+	localStorage.removeItem("cart");
+
 	// ============================
 	// ELEMENTS
 	// ============================
@@ -105,6 +107,8 @@ document.addEventListener("DOMContentLoaded", () => {
 		localStorage.removeItem("rentHours");
 		localStorage.removeItem("minPrice");
 		localStorage.removeItem("maxPrice");
+		localStorage.removeItem("cart");  
+		updateCartCount();                
 
 		// // ถ้าอยาก clear field ใน cart ด้วย
 		// clearFieldInCart();
@@ -267,12 +271,12 @@ document.addEventListener("DOMContentLoaded", () => {
 	// ============================
 
 	fetch("/sports_rental_system/staff/api/get_profile.php")
-    .then(res => res.json())
-    .then(data => {
+		.then(res => res.json())
+		.then(data => {
 
-      const pointEl =
-        document.getElementById("topPoints");
-    });
+			const pointEl =
+				document.getElementById("topPoints");
+		});
 
 	// ============================
 	// LOAD BRANCH
@@ -382,7 +386,7 @@ document.addEventListener("DOMContentLoaded", () => {
 		.then(res => res.json())
 		.then(data => {
 			if (data.success) {
-				
+
 				selectedBranchId = data.branch_id;
 
 				if (branchLabel) {

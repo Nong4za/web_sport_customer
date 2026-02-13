@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8" />
+    <title>ประวัติการใช้แต้ม</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/point-history.css">
+</head>
+
+<body>
+
+<header class="main-header">
+    <div class="header-top">
+        <div class="brand">
+            <span class="brand-name">ระบบจองอุปกรณ์กีฬา</span>
+            <small>Sports Equipment Booking System</small>
+        </div>
+
+        <div class="user-zone">
+            <div class="badge orange" id="topPoints">⭐ - คะแนน</div>
+            <a class="badge purple" href="coupon.html">🎟 คูปอง</a>
+            <a href="profile.html" class="profile-btn">👤 โปรไฟล์</a>
+        </div>
+    </div>
+
+    <div class="header-bottom">
+        <nav class="main-nav">
+            <a href="index.html" class="nav-item">เลือกอุปกรณ์</a>
+            <a href="my-bookings.html" class="nav-item">รายการจอง</a>
+            <a href="history.html" class="nav-item">ประวัติการเช่า</a>
+            <a href="history_point.html" class="nav-item active">ประวัติการใช้แต้ม</a>
+            <a href="status_maintenance.html" class="nav-item">สถานะการซ่อม</a>
+        </nav>
+    </div>
+</header>
+
+<h2 class="page-title">ประวัติการใช้แต้ม</h2>
+
+<div class="container">
+
+    <div id="loading">กำลังโหลดข้อมูลแต้ม...</div>
+
+    <div id="historyBox" class="detail-box hidden">
+
+        <section class="items">
+            <h3>รายการแต้มของคุณ</h3>
+            <div id="pointList"></div>
+        </section>
+
+    </div>
+
+</div>
+
+<script src="point-history.js"></script>
+
+</body>
+</html>

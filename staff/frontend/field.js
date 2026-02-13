@@ -65,6 +65,8 @@ document.addEventListener("DOMContentLoaded", function () {
         localStorage.removeItem("rentHours");
         localStorage.removeItem("minPrice");
         localStorage.removeItem("maxPrice");
+        localStorage.removeItem("cart");
+        updateCartCount();
         // // ถ้าอยาก clear field ใน cart ด้วย
         // clearFieldInCart();
         // ===== reload =====
