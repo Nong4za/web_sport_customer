@@ -345,42 +345,32 @@ function getCart() {
 }
 function getQtyInCart(id) {
     var cart = getCart();
+    var count = 0;
     for (var i = 0; i < cart.length; i++) {
-        if (String(cart[i].id) ===
-            String(id)) {
-            return cart[i].qty;
+        if (String(cart[i].id) === String(id)) {
+            count++;
         }
     }
-    return 0;
+    return count;
 }
 // ➕ เพิ่ม
 function increaseCartItem(item, maxStock) {
     var cart = getCart();
-    var index = -1;
-    for (var i = 0; i < cart.length; i++) {
-        if (String(cart[i].id) ===
-            String(item.equipment_id)) {
-            index = i;
-            break;
-        }
+    var currentQty = cart.filter(function (c) {
+        return String(c.id) === String(item.equipment_id);
+    }).length;
+    if (currentQty >= maxStock) {
+        alert("\u0E40\u0E1E\u0E34\u0E48\u0E21\u0E44\u0E14\u0E49\u0E21\u0E32\u0E01\u0E2A\u0E38\u0E14 ".concat(maxStock, " \u0E0A\u0E34\u0E49\u0E19"));
+        return;
     }
-    if (index === -1) {
-        cart.push({
-            id: String(item.equipment_id),
-            name: item.name,
-            price: item.price_per_unit,
-            qty: 1,
-            image: item.image_url,
-            stock: maxStock,
-            category_id: item.category_id
-        });
-    }
-    else {
-        if (cart[index].qty >=
-            maxStock)
-            return;
-        cart[index].qty++;
-    }
+    cart.push({
+        id: String(item.equipment_id),
+        name: item.name,
+        price: item.price_per_unit,
+        image: item.image_url,
+        type: "equipment",
+        instance_code: ""
+    });
     localStorage.setItem("cart", JSON.stringify(cart));
 }
 // ➖ ลด
@@ -388,17 +378,14 @@ function decreaseCartItem(item) {
     var cart = getCart();
     var index = -1;
     for (var i = 0; i < cart.length; i++) {
-        if (String(cart[i].id) ===
-            String(item.equipment_id)) {
+        if (String(cart[i].id) === String(item.equipment_id)) {
             index = i;
             break;
         }
     }
     if (index === -1)
         return;
-    cart[index].qty--;
-    if (cart[index].qty <= 0)
-        cart.splice(index, 1);
+    cart.splice(index, 1);
     localStorage.setItem("cart", JSON.stringify(cart));
 }
 // ============================
@@ -423,13 +410,7 @@ function updateCartCount() {
     if (!badge)
         return;
     var cart = getCart();
-    var total = 0;
-    for (var i = 0; i < cart.length; i++) {
-        total +=
-            Number(cart[i].qty) || 0;
-    }
-    badge.textContent =
-        total.toString();
+    badge.textContent = cart.length.toString();
 }
 // ===============================
 // GENERATE TIME SLOTS

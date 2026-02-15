@@ -93,7 +93,7 @@ try {
     $totalAmount = 0;
 
     foreach ($cart as $i) {
-        $totalAmount += (float)$i["price"] * (int)$i["qty"] * $rentHours;
+        $totalAmount += (float)$i["price"] * $rentHours;
     }
 
     $extraHourFee = 0;
@@ -159,6 +159,8 @@ try {
 
             $itemType = "Venue";
             $venueId = $item["id"];
+            $qty = 1;
+            $price = (float)$item["price"];
 
         } else {
 
@@ -169,10 +171,10 @@ try {
             if (!$equipmentInstanceId) {
                 throw new Exception("ยังไม่ได้เลือกหมายเลขอุปกรณ์");
             }
-        }
 
-        $qty   = (int)$item["qty"];
-        $price = (float)$item["price"];
+            $qty = 1;
+            $price = (float)$item["price"];
+        }
 
         $dStmt->bind_param(
             "sssssid",
@@ -191,54 +193,35 @@ try {
     }
 
     /* ===============================
-       UPDATE POINTS + HISTORY
+       UPDATE EQUIPMENT STATUS
     ================================ */
+    $updateEquip = $conn->prepare("
+        UPDATE equipment_instances
+        SET status = 'Rented',
+            current_location = 'Customer'
+        WHERE instance_code = ?
+        AND status = 'Ready'
+    ");
 
-    // REDEEM
-    if ($usedPoints > 0) {
+    foreach ($cart as $item) {
 
-        $updatePoint = $conn->prepare("
-            UPDATE customers
-            SET current_points = current_points - ?
-            WHERE customer_id = ?
-        ");
-        $updatePoint->bind_param("is", $usedPoints, $customerId);
-        if (!$updatePoint->execute()) {
-            throw new Exception($updatePoint->error);
-        }
+        if (strtolower($item["type"] ?? "") === "equipment") {
 
-        $insertHistory = $conn->prepare("
-            INSERT INTO point_history
-            (customer_id, booking_id, type, amount, description)
-            VALUES (?, ?, 'redeem', ?, 'ใช้แต้มแลกส่วนลด')
-        ");
-        $insertHistory->bind_param("ssi", $customerId, $bookingCode, $usedPoints);
-        if (!$insertHistory->execute()) {
-            throw new Exception($insertHistory->error);
-        }
-    }
+            $instanceCode = $item["instance_code"] ?? null;
 
-    // EARN
-    if ($pointsEarned > 0) {
+            if (!$instanceCode) {
+                throw new Exception("ไม่พบ instance_code");
+            }
 
-        $updateEarn = $conn->prepare("
-            UPDATE customers
-            SET current_points = current_points + ?
-            WHERE customer_id = ?
-        ");
-        $updateEarn->bind_param("is", $pointsEarned, $customerId);
-        if (!$updateEarn->execute()) {
-            throw new Exception($updateEarn->error);
-        }
+            $updateEquip->bind_param("s", $instanceCode);
 
-        $insertEarn = $conn->prepare("
-            INSERT INTO point_history
-            (customer_id, booking_id, type, amount, description)
-            VALUES (?, ?, 'earn', ?, 'ได้แต้มจากการเช่า')
-        ");
-        $insertEarn->bind_param("ssi", $customerId, $bookingCode, $pointsEarned);
-        if (!$insertEarn->execute()) {
-            throw new Exception($insertEarn->error);
+            if (!$updateEquip->execute()) {
+                throw new Exception($updateEquip->error);
+            }
+
+            if ($updateEquip->affected_rows === 0) {
+                throw new Exception("อุปกรณ์ถูกใช้งานอยู่แล้ว");
+            }
         }
     }
 
@@ -261,46 +244,5 @@ try {
         "message" => $e->getMessage()
     ]);
 }
-
-/* ===============================
-   UPDATE EQUIPMENT STATUS
-================================ */
-
-$updateEquip = $conn->prepare("
-    UPDATE equipment_instances
-    SET status = 'Rented',
-        current_location = 'Customer'
-    WHERE instance_code = ?
-    AND status = 'Ready'
-");
-
-if (!$updateEquip) {
-    throw new Exception($conn->error);
-}
-
-foreach ($cart as $item) {
-
-    $type = strtolower($item["type"] ?? "");
-
-    if ($type === "equipment") {
-
-        $instanceCode = $item["instance_code"] ?? null;
-
-        if (!$instanceCode) {
-            throw new Exception("ไม่พบ instance_code");
-        }
-
-        $updateEquip->bind_param("s", $instanceCode);
-
-        if (!$updateEquip->execute()) {
-            throw new Exception($updateEquip->error);
-        }
-
-        if ($updateEquip->affected_rows === 0) {
-            throw new Exception("อุปกรณ์ถูกใช้งานอยู่แล้ว");
-        }
-    }
-}
-
 
 $conn->close();

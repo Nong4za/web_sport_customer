@@ -10,8 +10,7 @@ header("Content-Type: application/json; charset=utf-8");
 /* ===============================
    READ JSON INPUT
 ================================ */
-
-$raw = file_get_contents("php://input");
+$raw  = file_get_contents("php://input");
 $data = json_decode($raw, true);
 
 if (!$data) {
@@ -25,15 +24,14 @@ if (!$data) {
 /* ===============================
    INPUT
 ================================ */
-
 $cart       = $data["cart"] ?? [];
 $rentDate   = $data["rentDate"] ?? null;
 $timeSlot   = isset($data["timeSlot"]) ? (int)$data["timeSlot"] : null;
 $rentHours  = (int)($data["rentHours"] ?? 1);
 
 $usedPoints     = (int)($data["usedPoints"] ?? 0);
-$couponDiscount = (int)($data["couponDiscount"] ?? 0);
-$couponCode     = (!empty($data["couponCode"])) ? $data["couponCode"] : null;
+$couponDiscount = (float)($data["couponDiscount"] ?? 0);
+$couponCode     = !empty($data["couponCode"]) ? trim($data["couponCode"]) : null;
 
 $branchId   = $data["branchId"] ?? null;
 $customerId = $_SESSION["customer_id"] ?? null;
@@ -41,27 +39,13 @@ $customerId = $_SESSION["customer_id"] ?? null;
 /* ===============================
    VALIDATE
 ================================ */
-
-$missing = [];
-
-if (!$customerId) $missing[] = "customerId";
-if (!$branchId)   $missing[] = "branchId";
-if (!$rentDate)   $missing[] = "rentDate";
-if ($timeSlot === null) $missing[] = "timeSlot";
-if (empty($cart)) $missing[] = "cart";
-
-if (!empty($missing)) {
+if (!$customerId || !$branchId || !$rentDate || $timeSlot === null || empty($cart)) {
     echo json_encode([
         "success" => false,
-        "message" => "ข้อมูลไม่ครบ",
-        "missing" => $missing
+        "message" => "ข้อมูลไม่ครบ"
     ]);
     exit;
 }
-
-/* ===============================
-   START TRANSACTION
-================================ */
 
 $conn->begin_transaction();
 
@@ -70,7 +54,6 @@ try {
     /* ===============================
        HELPER
     ================================ */
-
     function getIdByCode($conn, $table, $code) {
         $stmt = $conn->prepare("SELECT id FROM {$table} WHERE code = ? LIMIT 1");
         $stmt->bind_param("s", $code);
@@ -81,16 +64,11 @@ try {
 
     function generateBookingCode($conn) {
         do {
-            $num = random_int(0, 999999);
-            $code = "BK" . str_pad($num, 6, "0", STR_PAD_LEFT);
-
-            $stmt = $conn->prepare(
-                "SELECT 1 FROM bookings WHERE booking_id = ?"
-            );
+            $code = "BK" . str_pad(random_int(0, 999999), 6, "0", STR_PAD_LEFT);
+            $stmt = $conn->prepare("SELECT 1 FROM bookings WHERE booking_id = ?");
             $stmt->bind_param("s", $code);
             $stmt->execute();
             $stmt->store_result();
-
         } while ($stmt->num_rows > 0);
 
         return $code;
@@ -99,7 +77,6 @@ try {
     /* ===============================
        MASTER LOOKUP
     ================================ */
-
     $bookingStatusId = getIdByCode($conn, "booking_status", "WAITING_STAFF");
     $paymentStatusId = getIdByCode($conn, "payment_status", "UNPAID");
     $bookingTypeId   = getIdByCode($conn, "booking_types", "ONLINE");
@@ -111,19 +88,18 @@ try {
     /* ===============================
        DATETIME
     ================================ */
-
     $pickup = date("Y-m-d H:i:s", strtotime("$rentDate $timeSlot:00"));
     $return = date("Y-m-d H:i:s", strtotime("+$rentHours hours", strtotime($pickup)));
 
     /* ===============================
-       CALCULATE MONEY
+       CALCULATE MONEY (รองรับ qty)
     ================================ */
-
     $totalAmount = 0;
 
-    foreach ($cart as $i) {
-        $price = (float)$i["price"];
-        $qty   = (int)$i["qty"];
+    foreach ($cart as $item) {
+        $price = (float)$item["price"];
+        $qty   = (int)($item["qty"] ?? 1);
+
         $totalAmount += $price * $qty * $rentHours;
     }
 
@@ -132,13 +108,10 @@ try {
     elseif ($rentHours === 5) $extraHourFee = 200;
     elseif ($rentHours >= 6) $extraHourFee = 300;
 
-    $discountAmount = $couponDiscount;
-    $pointsUsedValue = $usedPoints; // 1 point = 1 บาท
-
     $netAmount = max(
         ($totalAmount + $extraHourFee)
-        - $discountAmount
-        - $pointsUsedValue,
+        - $couponDiscount
+        - $usedPoints,
         0
     );
 
@@ -147,7 +120,6 @@ try {
     /* ===============================
        INSERT BOOKING
     ================================ */
-
     $bookingCode = generateBookingCode($conn);
 
     $stmt = $conn->prepare("
@@ -183,12 +155,12 @@ try {
         $pickup,
         $return,
         $totalAmount,
-        $discountAmount,
+        $couponDiscount,
         $extraHourFee,
         $netAmount,
         $couponCode,
         $usedPoints,
-        $pointsUsedValue,
+        $usedPoints,
         $pointsEarned
     );
 
@@ -197,9 +169,8 @@ try {
     }
 
     /* ===============================
-       INSERT DETAILS
+       INSERT DETAILS (วนตาม qty)
     ================================ */
-
     $dStmt = $conn->prepare("
         INSERT INTO booking_details (
             booking_id,
@@ -219,80 +190,57 @@ try {
         $venueId = null;
 
         if ($type === "venue" || $type === "field") {
-            $type = "Venue";
+            $itemType = "Venue";
             $venueId = trim($item["id"]);
         } else {
-            $type = "Equipment";
+            $itemType = "Equipment";
             $equipmentId = trim($item["id"]);
         }
 
-        $qty   = (int)$item["qty"];
+        $qty   = (int)($item["qty"] ?? 1);
         $price = (float)$item["price"];
 
-        $dStmt->bind_param(
-            "sssssd",
-            $bookingCode,
-            $type,
-            $equipmentId,
-            $venueId,
-            $qty,
-            $price
-        );
+        // 🔥 สร้าง 1 row ต่อ 1 ชิ้น
+        for ($i = 0; $i < $qty; $i++) {
 
-        if (!$dStmt->execute()) {
-            throw new Exception($dStmt->error);
+            $oneQty = 1;
+
+            $dStmt->bind_param(
+                "sssssd",
+                $bookingCode,
+                $itemType,
+                $equipmentId,
+                $venueId,
+                $oneQty,
+                $price
+            );
+
+            if (!$dStmt->execute()) {
+                throw new Exception($dStmt->error);
+            }
         }
     }
 
     /* ===============================
-       COUPON USAGE (ถ้ามี)
+       COUPON
     ================================ */
-
     if (!empty($couponCode)) {
-
-        $checkCoupon = $conn->prepare("
-            SELECT 1 
-            FROM coupon_usages
-            WHERE coupon_code = ? 
-            AND customer_id = ?
-            LIMIT 1
-        ");
-
-        $checkCoupon->bind_param("ss", $couponCode, $customerId);
-        $checkCoupon->execute();
-        $checkCoupon->store_result();
-
-        if ($checkCoupon->num_rows > 0) {
-            throw new Exception("คุณได้ใช้คูปองนี้แล้ว");
-        }
 
         $insertCoupon = $conn->prepare("
             INSERT INTO coupon_usages (coupon_code, customer_id)
             VALUES (?, ?)
         ");
-
         $insertCoupon->bind_param("ss", $couponCode, $customerId);
-
-        if (!$insertCoupon->execute()) {
-            throw new Exception("บันทึกการใช้คูปองไม่สำเร็จ");
-        }
+        $insertCoupon->execute();
 
         $updateCoupon = $conn->prepare("
             UPDATE coupons
             SET used_count = used_count + 1
             WHERE code = ?
         ");
-
         $updateCoupon->bind_param("s", $couponCode);
-
-        if (!$updateCoupon->execute()) {
-            throw new Exception("อัปเดตจำนวนใช้คูปองไม่สำเร็จ");
-        }
+        $updateCoupon->execute();
     }
-
-    /* ===============================
-       COMMIT
-    ================================ */
 
     $conn->commit();
 
@@ -310,3 +258,5 @@ try {
         "message" => $e->getMessage()
     ]);
 }
+
+$conn->close();

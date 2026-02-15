@@ -21,7 +21,7 @@ bookingCodeEl.textContent = code;
 loadDetails();
 /* ================= LOAD DETAILS ================= */
 function loadDetails() {
-    fetch("/sports_rental_system/staff/api/get_returns_details.php?booking_id=".concat(code), {
+    fetch("/sports_rental_system/staff/api/get_return_detail.php?booking_id=".concat(code), {
         credentials: "include"
     })
         .then(function (r) { return r.json(); })

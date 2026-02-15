@@ -607,132 +607,71 @@ function getCart(): any[] {
 
 }
 
-function getQtyInCart(
-	id: string | number
-): number {
+function getQtyInCart(id: string | number): number {
 
-	const cart =
-		getCart();
+    const cart = getCart();
 
-	for (let i = 0;
-		i < cart.length;
-		i++) {
+    let count = 0;
 
-		if (
-			String(cart[i].id) ===
-			String(id)
-		) {
-			return cart[i].qty;
-		}
+    for (let i = 0; i < cart.length; i++) {
+        if (String(cart[i].id) === String(id)) {
+            count++;
+        }
+    }
 
-	}
-
-	return 0;
+    return count;
 }
+
 
 
 // ➕ เพิ่ม
-function increaseCartItem(
-	item: any,
-	maxStock: number
-) {
+function increaseCartItem(item: any, maxStock: number) {
 
-	const cart =
-		getCart();
+    const cart = getCart();
 
-	let index = -1;
+    const currentQty = cart.filter(c =>
+        String(c.id) === String(item.equipment_id)
+    ).length;
 
-	for (let i = 0;
-		i < cart.length;
-		i++) {
+    if (currentQty >= maxStock) {
+        alert(`เพิ่มได้มากสุด ${maxStock} ชิ้น`);
+        return;
+    }
 
-		if (
-			String(cart[i].id) ===
-			String(item.equipment_id)
-		) {
+    cart.push({
+        id: String(item.equipment_id),
+        name: item.name,
+        price: item.price_per_unit,
+        image: item.image_url,
+        type: "equipment",
+        instance_code: ""
+    });
 
-			index = i;
-			break;
-		}
-
-	}
-
-	if (index === -1) {
-
-		cart.push({
-			id: String(
-				item.equipment_id
-			),
-			name: item.name,
-			price:
-				item.price_per_unit,
-			qty: 1,
-			image:
-				item.image_url,
-			stock: maxStock,
-
-			category_id: item.category_id
-		});
-
-	} else {
-
-		if (
-			cart[index].qty >=
-			maxStock
-		)
-			return;
-
-		cart[index].qty++;
-	}
-
-	localStorage.setItem(
-		"cart",
-		JSON.stringify(cart)
-	);
-
+    localStorage.setItem("cart", JSON.stringify(cart));
 }
+
 
 
 // ➖ ลด
-function decreaseCartItem(
-	item: any
-) {
+function decreaseCartItem(item: any) {
 
-	const cart =
-		getCart();
+    const cart = getCart();
 
-	let index = -1;
+    let index = -1;
 
-	for (let i = 0;
-		i < cart.length;
-		i++) {
+    for (let i = 0; i < cart.length; i++) {
+        if (String(cart[i].id) === String(item.equipment_id)) {
+            index = i;
+            break;
+        }
+    }
 
-		if (
-			String(cart[i].id) ===
-			String(item.equipment_id)
-		) {
+    if (index === -1) return;
 
-			index = i;
-			break;
-		}
+    cart.splice(index, 1);
 
-	}
-
-	if (index === -1)
-		return;
-
-	cart[index].qty--;
-
-	if (cart[index].qty <= 0)
-		cart.splice(index, 1);
-
-	localStorage.setItem(
-		"cart",
-		JSON.stringify(cart)
-	);
-
+    localStorage.setItem("cart", JSON.stringify(cart));
 }
-
 
 // ============================
 // UPDATE CARD
@@ -776,31 +715,14 @@ function updateCardQty(
 
 function updateCartCount() {
 
-	const badge =
-		document.getElementById(
-			"cartCount"
-		);
+    const badge = document.getElementById("cartCount");
+    if (!badge) return;
 
-	if (!badge)
-		return;
+    const cart = getCart();
 
-	const cart =
-		getCart();
-
-	let total = 0;
-
-	for (let i = 0;
-		i < cart.length;
-		i++) {
-
-		total +=
-			Number(cart[i].qty) || 0;
-	}
-
-	badge.textContent =
-		total.toString();
-
+    badge.textContent = cart.length.toString();
 }
+
 
 
 // ===============================

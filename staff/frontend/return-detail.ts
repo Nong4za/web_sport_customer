@@ -31,7 +31,7 @@ loadDetails();
 
 function loadDetails() {
 
-    fetch(`/sports_rental_system/staff/api/get_returns_details.php?booking_id=${code}`, {
+    fetch(`/sports_rental_system/staff/api/get_return_detail.php?booking_id=${code}`, {
         credentials: "include"
     })
         .then(r => r.json())
