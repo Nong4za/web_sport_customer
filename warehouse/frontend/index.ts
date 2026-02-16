@@ -99,7 +99,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 			const ready = items.filter(i => i.status === "Ready").length;
 			const rented = items.filter(i => i.status === "Rented").length;
-			const repair = items.filter(i => i.status === "Damaged").length;
+			const repair = items.filter(i => i.status === "Maintenance").length;
 			const lost = items.filter(i => i.status === "Lost").length;
 
 			const expiringSoonItems = items.filter(i => {
@@ -145,9 +145,6 @@ document.addEventListener("DOMContentLoaded", () => {
 			<div class="info-section">
                 <p class="section-title">ข้อมูลเพิ่มเติม:</p>
                 <div class="info-alert-container">
-                    ${repair > 0
-					? `<div class="info-alert"><i class="alert-icon">!</i> อุปกรณ์ใช้งานหนัก: ${repair} ชิ้น</div>`
-					: ''}
                     ${expiringSoonItems > 0
 					? `<div class="info-alert warning"><i class="alert-icon">!</i> ใกล้หมดอายุการใช้งาน: ${expiringSoonItems} ชิ้น</div>`
 					: ''}
