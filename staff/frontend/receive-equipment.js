@@ -209,7 +209,7 @@ function submitReceive() {
             alert(res.message || "บันทึกไม่ได้");
             return;
         }
-        alert("✅ รับอุปกรณ์เรียบร้อย");
+        alert("รับอุปกรณ์เรียบร้อย");
         window.location.href = "bookings.html";
     });
 }

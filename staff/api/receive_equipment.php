@@ -87,6 +87,10 @@ try {
         $instanceCode = $i["instance_code"] ?? null;
         $detailId     = $i["detail_id"] ?? null;
 
+        if (empty($i["equipment_id"])) {
+        continue;
+        }
+
         if (!$instanceCode || !$detailId) {
             throw new Exception("ข้อมูลอุปกรณ์ไม่ครบ");
         }
