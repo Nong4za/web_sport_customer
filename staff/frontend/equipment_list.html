@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8">
+  <title>อุปกรณ์ทั้งหมด</title>
+  <link rel="stylesheet" href="css/equipment_list.css">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai&display=swap" rel="stylesheet">
+</head>
+
+<body>
+  <header class="main-header">
+
+    <div class="header-top">
+
+      <div class="brand">
+        <span class="brand-name">ระบบเช่าอุปกรณ์กีฬา</span>
+        <small>Sports Equipment Rental System</small>
+      </div>
+
+      <div class="staff-zone">
+        <a href="profile.html" class="profile-btn">👤 โปรไฟล์</a>
+      </div>
+
+    </div>
+
+    <div class="header-bottom">
+      <nav class="main-nav">
+        <a href="index.html" class="nav-item">เช่าอุปกรณ์</a>
+        <a href="bookings.html" class="nav-item">รายการเช่า</a>
+        <a href="return.html" class="nav-item">คืนอุปกรณ์</a>
+        <a href="equipment.html" class="nav-item active">อุปกรณ์ทั้งหมด</a>
+        <a href="maintenance.html" class="nav-item">ซ่อมอุปกรณ์</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+      <div class="filter-block">
+        <h4>สถานะอุปกรณ์</h4>
+        <select id="statusFilter" class="filter-select">
+          <option value="">ทั้งหมด</option>
+          <option value="Ready">พร้อมใช้งาน</option>
+          <option value="Rented">กำลังใช้งาน</option>
+          <option value="Maintenance">บำรุงรักษา</option>
+          <option value="Lost">สูญหาย</option>
+        </select>
+      </div>
+
+      <div class="filter-block">
+        <h4>ประเภท</h4>
+        <select id="categoryFilter" class="filter-select">
+          <option value="">ทั้งหมด</option>
+        </select>
+      </div>
+
+      <button id="resetFilters" class="reset-btn">
+        รีเซ็ตตัวกรอง
+      </button>
+
+    </aside>
+
+    <!-- CONTENT -->
+    <main class="content">
+
+      <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="ค้นหา รหัส / ชื่ออุปกรณ์...">
+      </div>
+
+      <div class="table-wrapper">
+        <table class="equipment-table">
+          <thead>
+            <tr>
+              <th>รหัส</th>
+              <th>ชื่อ</th>
+              <th>ประเภท</th>
+              <th>สาขา</th>
+              <th>สถานะ</th>
+              <th>ราคา/ชม.</th>
+            </tr>
+          </thead>
+          <tbody id="equipmentTableBody"></tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+
+  <script src="equipment_list.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8">
+  <title>ระบบแจ้งซ่อม</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/maintenance.css">
+</head>
+
+<body>
+  <header class="main-header">
+
+    <div class="header-top">
+
+      <div class="brand">
+        <span class="brand-name">ระบบเช่าอุปกรณ์กีฬา</span>
+        <small>Sports Equipment Rental System</small>
+      </div>
+
+      <div class="user-zone">
+        <a href="profile.html" class="profile-btn">👤 โปรไฟล์</a>
+      </div>
+
+    </div>
+
+    <div class="header-bottom">
+      <nav class="main-nav">
+        <a href="index.html" class="nav-item">เช่าอุปกรณ์</a>
+        <a href="bookings.html" class="nav-item">รายการเช่า</a>
+        <a href="return.html" class="nav-item">คืนอุปกรณ์</a>
+        <a href="equipment_list.html" class="nav-item">อุปกรณ์ทั้งหมด</a>
+        <a href="maintenance.html" class="nav-item active">ซ่อมอุปกรณ์</a>
+      </nav>
+    </div>
+
+  </header>
+
+  <div class="container">
+
+    <h2 class="page-title">ระบบแจ้งซ่อมอุปกรณ์</h2>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="formTab">แจ้งซ่อม</button>
+      <button class="tab-btn" data-tab="listTab">สถานะการซ่อมของฉัน</button>
+    </div>
+
+    <!-- ================= FORM ================= -->
+    <div id="formTab" class="tab-content active">
+
+      <div class="form-box">
+
+        <div class="form-group">
+          <label>หมวดหมู่</label>
+          <select id="categorySelect"></select>
+        </div>
+
+        <div class="form-group">
+          <label>อุปกรณ์</label>
+          <select id="equipmentSelect"></select>
+        </div>
+
+        <div class="form-group">
+          <label>รหัสอุปกรณ์ (Instance)</label>
+          <select id="instanceSelect"></select>
+        </div>
+
+        <div class="form-group">
+          <label>ระดับความเสียหาย</label>
+          <select id="damageLevel">
+            <option value="">-- เลือก --</option>
+            <option value="1">เล็กน้อย</option>
+            <option value="2">ปานกลาง</option>
+            <option value="3">รุนแรง</option>
+          </select>
+
+        </div>
+
+        <div class="form-group">
+          <label>รายละเอียด</label>
+          <textarea id="description"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>รหัสลูกค้า (ถ้ามี)</label>
+          <input type="text" id="customerId">
+        </div>
+
+        <button id="submitBtn" class="btn-primary">
+          บันทึกแจ้งซ่อม
+        </button>
+
+      </div>
+    </div>
+
+    <!-- ================= LIST ================= -->
+    <div id="listTab" class="tab-content">
+
+      <div class="list-layout">
+
+        <!-- ================= FILTER LEFT ================= -->
+        <div class="filter-box">
+
+          <!-- Search -->
+          <div class="filter-group">
+            <input type="text" id="searchInput" placeholder="ค้นหา อุปกรณ์">
+          </div>
+
+          <!-- Status (dynamic) -->
+          <div class="filter-group">
+            <select id="statusFilter">
+              <option value="">-- ทุกสถานะ --</option>
+            </select>
+          </div>
+
+          <!-- Damage (dynamic) -->
+          <div class="filter-group">
+            <select id="damageFilter">
+              <option value="">-- ทุกระดับความเสียหาย --</option>
+            </select>
+          </div>
+
+          <!-- Reset -->
+          <div class="filter-group">
+            <button id="resetFilters" class="btn-reset">
+              รีเซ็ตตัวกรอง
+            </button>
+          </div>
+
+        </div>
+
+        <!-- ================= TABLE RIGHT ================= -->
+        <div class="list-content">
+
+          <table class="maintenance-table">
+
+            <thead>
+              <tr>
+                <th>รหัสอุปกรณ์</th>
+                <th>รายละเอียด</th>
+                <th>วันที่แจ้ง</th>
+                <th>ระดับความเสียหาย</th>
+                <th>สถานะ</th>
+              </tr>
+            </thead>
+
+            <tbody id="maintenanceList">
+              <!-- TS จะ render <tr> ที่นี่ -->
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+
+
+    <script src="maintenance.js"></script>
+</body>
+
+</html>

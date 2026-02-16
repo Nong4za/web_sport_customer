@@ -17,6 +17,8 @@ const bookingList =
 const tabs =
     document.querySelectorAll(".status-tab") as NodeListOf<HTMLButtonElement>;
 
+    
+
 /* ================= STATE ================= */
 
 let pendingCancelId: string | null = null;
