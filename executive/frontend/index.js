@@ -160,12 +160,12 @@ function updateKPI(kpi) {
     var _a, _b, _c, _d;
     document.getElementById("kpiBookings").textContent =
         String((_a = kpi === null || kpi === void 0 ? void 0 : kpi.total_bookings) !== null && _a !== void 0 ? _a : 0);
-    document.getElementById("kpiUsers").textContent =
-        String((_b = kpi === null || kpi === void 0 ? void 0 : kpi.total_users) !== null && _b !== void 0 ? _b : 0);
     document.getElementById("kpiRevenue").textContent =
-        Number((_c = kpi === null || kpi === void 0 ? void 0 : kpi.total_revenue) !== null && _c !== void 0 ? _c : 0).toLocaleString() + " บาท";
+        Number((_b = kpi === null || kpi === void 0 ? void 0 : kpi.total_revenue) !== null && _b !== void 0 ? _b : 0).toLocaleString() + " บาท";
     document.getElementById("kpiExpense").textContent =
-        Number((_d = kpi === null || kpi === void 0 ? void 0 : kpi.total_expense) !== null && _d !== void 0 ? _d : 0).toLocaleString() + " บาท";
+        Number((_c = kpi === null || kpi === void 0 ? void 0 : kpi.total_expense) !== null && _c !== void 0 ? _c : 0).toLocaleString() + " บาท";
+    document.getElementById("kpiProfit").textContent =
+        Number((_d = kpi === null || kpi === void 0 ? void 0 : kpi.net_profit) !== null && _d !== void 0 ? _d : 0).toLocaleString() + " บาท";
 }
 /* ==============================
    TREND
@@ -200,14 +200,6 @@ function updateBookingRatio(data) {
     bookingRatioChart.data.labels = (data === null || data === void 0 ? void 0 : data.labels) || [];
     bookingRatioChart.data.datasets[0].data = (data === null || data === void 0 ? void 0 : data.data) || [];
     bookingRatioChart.update();
-}
-/* ==============================
-   TOP 5
-============================== */
-function updateTop5(top) {
-    topChart.data.labels = (top === null || top === void 0 ? void 0 : top.labels) || [];
-    topChart.data.datasets[0].data = (top === null || top === void 0 ? void 0 : top.counts) || [];
-    topChart.update();
 }
 /* ==============================
    DROPDOWNS (FIXED)
@@ -284,6 +276,19 @@ function loadBranches() {
         });
     });
 }
+function updateTop5(top) {
+    var _a;
+    var count = ((_a = top === null || top === void 0 ? void 0 : top.counts) === null || _a === void 0 ? void 0 : _a.length) || 0;
+    var colors = [];
+    for (var i = 0; i < count; i++) {
+        var opacity = 1 - (i * 0.12);
+        colors.push("rgba(255,122,0,".concat(opacity, ")"));
+    }
+    topChart.data.labels = (top === null || top === void 0 ? void 0 : top.labels) || [];
+    topChart.data.datasets[0].data = (top === null || top === void 0 ? void 0 : top.counts) || [];
+    topChart.data.datasets[0].backgroundColor = colors;
+    topChart.update();
+}
 /* ==============================
    INIT CHARTS
 ============================== */
@@ -293,9 +298,45 @@ function initCharts() {
         data: {
             labels: [],
             datasets: [
-                { label: "จำนวนการจอง", data: [], borderColor: "#ff7a00" },
-                { label: "รายได้", data: [], borderColor: "#3b82f6" }
+                {
+                    label: "จำนวนการจอง",
+                    data: [],
+                    borderColor: "#ff7a00",
+                    yAxisID: "yBookings",
+                    tension: 0.3
+                },
+                {
+                    label: "รายได้",
+                    data: [],
+                    borderColor: "#3b82f6",
+                    yAxisID: "yRevenue",
+                    tension: 0.3
+                }
             ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                yBookings: {
+                    type: "linear",
+                    position: "left",
+                    title: {
+                        display: true,
+                        text: "จำนวนการจอง"
+                    }
+                },
+                yRevenue: {
+                    type: "linear",
+                    position: "right",
+                    grid: {
+                        drawOnChartArea: false
+                    },
+                    title: {
+                        display: true,
+                        text: "รายได้ (บาท)"
+                    }
+                }
+            }
         }
     });
     topChart = new Chart(document.getElementById("topChart"), {
@@ -303,7 +344,7 @@ function initCharts() {
         data: {
             labels: [],
             datasets: [
-                { label: "จำนวนครั้งที่ถูกจอง", data: [], backgroundColor: "#ff7a00" }
+                { label: "จำนวนครั้งที่ถูกจอง", data: [] }
             ]
         }
     });
@@ -314,10 +355,7 @@ function initCharts() {
             datasets: [{
                     data: [],
                     backgroundColor: [
-                        "#3b82f6",
                         "#22c55e",
-                        "#f59e0b",
-                        "#ef4444",
                         "#8b5cf6"
                     ]
                 }]

@@ -302,6 +302,7 @@ while ($row = $resRatio->fetch_assoc()) {
     $ratioData[] = (int)$row["total"];
 }
 
+$net_profit = (float)$kpi["total_revenue"] - (float)$expense["total_expense"];
 
 /* ==============================
    RESPONSE
@@ -311,8 +312,8 @@ echo json_encode([
     "kpi"=>[
         "total_bookings"=>(int)$kpi["total_bookings"],
         "total_revenue"=>(float)$kpi["total_revenue"],
-        "total_users"=>(int)$kpi["total_users"],
-        "total_expense"=>(float)$expense["total_expense"]
+        "total_expense"=>(float)$expense["total_expense"],
+        "net_profit"=>$net_profit
     ],
     "trend"=>[
         "labels"=>$labels,
