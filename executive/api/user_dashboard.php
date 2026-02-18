@@ -60,8 +60,8 @@ if ($province_id !== "") {
 
 if ($branch_id !== "") {
     $where[] = "bk.branch_id = ?";
-    $params[] = (int)$branch_id;
-    $types .= "i";
+    $params[] = $branch_id;
+    $types .= "s";
 }
 
 /* CUSTOMER */
